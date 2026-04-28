@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product",
+  "description": "Payload para POST/PUT /products na API Tray",
+  "type": "object",
+  "required": ["name", "price"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Nome do produto"
+    },
+    "price": {
+      "type": ["string", "number"],
+      "minimum": 0,
+      "description": "Preço de venda"
+    },
+    "cost_price": {
+      "type": ["string", "number"],
+      "description": "Preço de custo"
+    },
+    "promotional_price": {
+      "type": ["string", "number"],
+      "description": "Preço promocional"
+    },
+    "stock": {
+      "type": ["string", "number"],
+      "description": "Quantidade em estoque"
+    },
+    "available": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=indisponível, 1=disponível"
+    },
+    "available_in_store": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=oculto da vitrine, 1=visível"
+    },
+    "category_id": {
+      "type": ["string", "number"],
+      "description": "ID da categoria principal"
+    },
+    "brand": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Nome da marca"
+    },
+    "brand_id": {
+      "type": ["string", "number"],
+      "description": "ID da marca"
+    },
+    "ean": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Código de barras EAN"
+    },
+    "ncm": {
+      "type": "string",
+      "maxLength": 8,
+      "description": "Classificação fiscal NCM (8 dígitos)"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 4800,
+      "description": "Descrição completa do produto"
+    },
+    "description_small": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "Descrição curta"
+    },
+    "reference": {
+      "type": "string",
+      "maxLength": 120,
+      "description": "Referência interna"
+    },
+    "weight": {
+      "type": ["string", "number"],
+      "description": "Peso em gramas"
+    },
+    "length": {
+      "type": ["string", "number"],
+      "description": "Comprimento"
+    },
+    "width": {
+      "type": ["string", "number"],
+      "description": "Largura"
+    },
+    "height": {
+      "type": ["string", "number"],
+      "description": "Altura"
+    },
+    "free_shipping": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=frete normal, 1=frete grátis"
+    },
+    "hot": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=normal, 1=destaque"
+    },
+    "release": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=lançado, 1=lançamento"
+    },
+    "virtual_product": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=físico, 1=digital/virtual"
+    }
+  },
+  "additionalProperties": true
+}

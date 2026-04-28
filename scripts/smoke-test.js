@@ -13,6 +13,7 @@
  */
 
 import { readFileSync, readdirSync, statSync } from 'fs';
+import { spawnSync } from 'child_process';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -215,6 +216,92 @@ try {
 } catch (e) {
   fail(`Verificação de agentes — erro: ${e.message}`);
 }
+
+// ─── 6. validate.mjs — payload válido ─────────────────────────────────────────
+
+section('6. validate.mjs com payload válido');
+
+const validPayloads = [
+  { skill: 'produtos',    payload: '{"name":"Produto Teste","price":"99.90"}' },
+  { skill: 'pedidos',     payload: '{"client_id":1,"products":[]}' },
+  { skill: 'autorizacao', payload: '{"consumer_key":"abc","consumer_secret":"xyz","code":"123"}' },
+  { skill: 'webhooks',    payload: '{"seller_id":100,"scope_id":200,"scope_name":"order","act":"insert"}' },
+  { skill: 'clientes',    payload: '{"name":"João Silva","email":"joao@exemplo.com"}' },
+];
+
+for (const { skill, payload } of validPayloads) {
+  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
+  if (result.status === 0) {
+    ok(`skills/${skill}/scripts/validate.mjs — payload válido aceito`);
+  } else {
+    fail(`skills/${skill}/scripts/validate.mjs — falhou com payload válido: ${result.stderr?.trim()}`);
+  }
+}
+
+// ─── 7. validate.mjs — payload inválido ───────────────────────────────────────
+
+section('7. validate.mjs com payload inválido (deve rejeitar)');
+
+const invalidPayloads = [
+  { skill: 'produtos',    payload: '{"price":"99.90"}',              expect: 'name ausente' },
+  { skill: 'pedidos',     payload: '{"products":[]}',                expect: 'client_id ausente' },
+  { skill: 'autorizacao', payload: '{"consumer_key":"abc"}',         expect: 'consumer_secret e code ausentes' },
+  { skill: 'webhooks',    payload: '{"seller_id":100}',              expect: 'scope_id/scope_name/act ausentes' },
+  { skill: 'clientes',    payload: '{"cpf":"12345678901"}',          expect: 'name e email ausentes' },
+];
+
+for (const { skill, payload, expect } of invalidPayloads) {
+  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
+  if (result.status === 1) {
+    ok(`skills/${skill}/scripts/validate.mjs — rejeitou payload inválido (${expect})`);
+  } else {
+    fail(`skills/${skill}/scripts/validate.mjs — deveria rejeitar (${expect}) mas retornou exit ${result.status}`);
+  }
+}
+
+// ─── 8. Seção "Antes de responder" em todos os SKILL.md ───────────────────────
+
+section('8. Seção "## Antes de responder" em todos os SKILL.md');
+
+let totalSection = 0;
+let missingSection = 0;
+walkDir(join(ROOT, 'skills'), 'SKILL.md', (fullPath) => {
+  const rel = fullPath.replace(ROOT + '/', '');
+  totalSection++;
+  try {
+    const content = readFileSync(fullPath, 'utf-8');
+    if (!content.includes('## Antes de responder')) {
+      fail(`${rel} — seção "## Antes de responder" ausente`);
+      missingSection++;
+    }
+  } catch (e) {
+    fail(`${rel} — não foi possível ler: ${e.message}`);
+  }
+});
+if (missingSection === 0) ok(`${totalSection} SKILL.md contêm a seção "## Antes de responder"`);
+
+// ─── 9. Campo when_not_to_use em todos os SKILL.md ────────────────────────────
+
+section('9. Campo "when_not_to_use" no frontmatter de todos os SKILL.md');
+
+let totalField = 0;
+let missingField = 0;
+walkDir(join(ROOT, 'skills'), 'SKILL.md', (fullPath) => {
+  const rel = fullPath.replace(ROOT + '/', '');
+  totalField++;
+  try {
+    const content = readFileSync(fullPath, 'utf-8');
+    if (!content.includes('when_not_to_use:')) {
+      fail(`${rel} — campo "when_not_to_use" ausente no frontmatter`);
+      missingField++;
+    }
+  } catch (e) {
+    fail(`${rel} — não foi possível ler: ${e.message}`);
+  }
+});
+if (missingField === 0) ok(`${totalField} SKILL.md contêm o campo "when_not_to_use"`);
 
 // ─── Resultado final ───────────────────────────────────────────────────────────
 
