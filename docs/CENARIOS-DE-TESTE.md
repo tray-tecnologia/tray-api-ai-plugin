@@ -437,3 +437,109 @@ A IA deve:
 ```
 ```
 ````
+## Bloco 3 — Validação de payload (`validate.mjs` + regras BR)
+
+> Mistura proposital: 3.1 e 3.3 testam o `validate.mjs` rejeitando campos `required` faltantes; 3.2 testa a regra BR de CPF (algoritmo de verificação) que vem do `AGENTS.md` — o `validate.mjs` de `clientes` não tem regex de CPF, apenas `maxLength: 14`.
+
+### 3.1 — Produto sem campo obrigatório
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 3 — Validação de payload
+**O que valida:** o `validate.mjs` rejeita payload sem `name` e a IA corrige antes de devolver código (não devolve código quebrado).
+
+#### Prompt (copy-paste)
+
+> Cria um produto na minha Tray apenas com o preço 99.90, sem nome (vou definir depois).
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-produtos`.
+2. Tentar `validate.mjs` com `{"Product": {"price":"99.90"}}` — saída: `❌ Validação falhou — 1 erro: "name" é obrigatório mas está ausente.`
+3. **Não** entregar código pronto. Em vez disso, alertar o usuário: "o nome é obrigatório; me passe um nome para eu cadastrar o produto" (ou colocar um placeholder evidente como `name: '<NOME OBRIGATÓRIO>'` e marcar para preenchimento).
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-produtos`
+- [ ] **`validate.mjs` executado:** sim
+- [ ] **`validate.mjs` rejeitou:** sim, com mensagem sobre `name`
+- [ ] **IA corrigiu/alertou:** não entregou código que estouraria HTTP 400
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `tray-api`
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 3.2 — Cliente com CPF malformado
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 3 — Validação de payload
+**O que valida:** a IA reconhece CPF inválido pela regra do `AGENTS.md` (11 dígitos + algoritmo de verificação) — o `validate.mjs` por si só **não** detecta isso.
+
+#### Prompt (copy-paste)
+
+> Cadastra um cliente na Tray: nome 'Maria', email 'maria@x.com', CPF '111'.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-clientes`.
+2. Reconhecer CPF malformado pela regra do `AGENTS.md` ("CPF: 11 dígitos, validar com algoritmo de verificação").
+3. **Não** enviar — alertar o usuário que `'111'` não é CPF válido e pedir um CPF correto.
+4. (Opcional) Rodar `validate.mjs` — vai aprovar (schema só checa `maxLength: 14`), o que reforça que a barreira veio do `AGENTS.md`, não do schema.
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-clientes`
+- [ ] **Regra BR do `AGENTS.md` aplicada:** IA reconheceu CPF inválido
+- [ ] **IA não enviou payload com CPF malformado**
+- [ ] **`validate.mjs` (se rodado) aprovou** — confirma que a barreira não veio do schema
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 3.3 — Webhook recebido sem campo `act`
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 3 — Validação de payload
+**O que valida:** o `validate.mjs` de `webhooks` rejeita payload recebido sem `act` (campo obrigatório do schema), e a IA explica que o payload está malformado.
+
+#### Prompt (copy-paste)
+
+> Recebi este payload de webhook no meu listener da Tray: `{"seller_id": 100, "scope_id": 200, "scope_name": "order"}`. Como processo isso?
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-webhooks`.
+2. Rodar `node skills/webhooks/scripts/validate.mjs '{"seller_id":100,"scope_id":200,"scope_name":"order"}'`.
+3. Saída: `❌ Validação falhou — 1 erro: "act" é obrigatório mas está ausente.`
+4. Explicar que `act` é obrigatório (`insert`, `update`, `delete`) e que o payload está incompleto/malformado — pode ser erro de envio ou de parsing.
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-webhooks`
+- [ ] **`validate.mjs` executado**
+- [ ] **`validate.mjs` rejeitou por `act` ausente**
+- [ ] **IA explicou o erro:** mencionou `insert`/`update`/`delete`
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `api.*tray`
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+````
