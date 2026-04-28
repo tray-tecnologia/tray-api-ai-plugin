@@ -303,3 +303,137 @@ A IA deve:
 
 ```
 ```
+## Bloco 2 — Disambiguação (`when_not_to_use`)
+
+> Testa que, em prompts ambíguos, a IA escolhe a skill correta consultando o campo `when_not_to_use` no frontmatter.
+
+### 2.1 — Cores de produto
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 2 — Disambiguação
+**O que valida:** ao mencionar variação de cor, a IA escolhe `tray-variacoes`, **não** `tray-produtos` (mesmo o prompt mencionando "produto").
+
+#### Prompt (copy-paste)
+
+> Como adiciono variações de cor (azul, vermelho, preto) ao produto 'Camiseta Básica' na minha loja Tray?
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-variacoes`, **não** `tray-produtos`.
+2. Citar o endpoint `POST {api_address}/products/{id}/variants?access_token=…`.
+3. Mostrar payload com campos típicos de variação (cor, tamanho, estoque por variação).
+
+#### Checklist de verificação
+
+- [ ] **Skill correta:** `tray-variacoes` (não `tray-produtos`)
+- [ ] **Endpoint correto:** `/products/{id}/variants`
+- [ ] **`when_not_to_use` foi respeitado:** a IA não tentou criar/editar o produto-pai
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `tray-api`/`/products`
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 2.2 — Fotos do produto
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 2 — Disambiguação
+**O que valida:** ao mencionar fotos/imagens, a IA escolhe `tray-imagens-produtos`, **não** `tray-produtos`.
+
+#### Prompt (copy-paste)
+
+> Quero adicionar 5 fotos ao produto 'Camiseta Básica' da minha Tray. As fotos estão em URLs públicas.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-imagens-produtos`, **não** `tray-produtos`.
+2. Citar o endpoint `POST {api_address}/products/{id}/images?access_token=…`.
+3. Mostrar payload com URL e ordenação.
+
+#### Checklist de verificação
+
+- [ ] **Skill correta:** `tray-imagens-produtos` (não `tray-produtos`)
+- [ ] **Endpoint correto:** `/products/{id}/images`
+- [ ] **`when_not_to_use` foi respeitado**
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 2.3 — Combo de produtos
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 2 — Disambiguação
+**O que valida:** ao pedir "combo", a IA escolhe `tray-kits`, **não** `tray-produtos`.
+
+#### Prompt (copy-paste)
+
+> Quero criar um combo na minha loja Tray: 1 camiseta + 1 calça por 99.90 com desconto.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-kits`, **não** `tray-produtos`.
+2. Citar o endpoint `POST {api_address}/kits?access_token=…`.
+3. Listar os produtos componentes e o preço do kit.
+
+#### Checklist de verificação
+
+- [ ] **Skill correta:** `tray-kits` (não `tray-produtos`)
+- [ ] **Endpoint correto:** `/kits`
+- [ ] **`when_not_to_use` foi respeitado**
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 2.4 — Categorizar produtos
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 2 — Disambiguação
+**O que valida:** ao pedir categorização, a IA escolhe `tray-categorias`, **não** `tray-produtos`.
+
+#### Prompt (copy-paste)
+
+> Como organizo os produtos da minha loja Tray em categorias (Masculino, Feminino, Infantil)?
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-categorias`, **não** `tray-produtos`.
+2. Citar o endpoint `POST {api_address}/categories?access_token=…`.
+3. Mostrar como vincular produto a categoria via `category_id`.
+
+#### Checklist de verificação
+
+- [ ] **Skill correta:** `tray-categorias` (não `tray-produtos`)
+- [ ] **Endpoint correto:** `/categories`
+- [ ] **`when_not_to_use` foi respeitado**
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+````
