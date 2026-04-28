@@ -543,3 +543,119 @@ A IA deve:
 ```
 ```
 ````
+## Bloco 4 — Hooks: falsos positivos
+
+> *Aplicável apenas a Claude Code e Cursor.* Testa que o hook `UserPromptSubmit` **NÃO** dispara em prompts que mencionam "tray" mas não têm relação com a API Tray. O matcher antigo (`tray|Tray|TRAY`) disparava nesses casos; o novo (`api.*tray|tray.*api|api_address|...`) não.
+
+### 4.1 — Ícone base64 para meu app
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 4 — Hooks: falsos positivos
+**O que valida:** sem qualquer menção a "tray", o hook não dispara.
+
+#### Prompt (copy-paste)
+
+> Crie um ícone em base64 para o meu app.
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **NÃO** dispara — não há nenhuma das palavras-chave do matcher.
+2. A IA responde com um SVG/PNG em base64, sem injeção de contexto da Tray.
+
+#### Checklist de verificação
+
+- [ ] **Hook NÃO disparou:** painel "System"/"Hooks" ou "Additional context" vazio para este prompt
+- [ ] **Resposta sem contexto da Tray:** nenhuma menção a OAuth, `access_token`, `api_address`
+- [ ] **A IA respondeu o que foi pedido:** ícone base64
+
+#### Observações
+
+```
+```
+
+---
+
+### 4.2 — Ícone para projeto tray-api-claude-plugin
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 4 — Hooks: falsos positivos
+**O que valida:** "tray" como nome de projeto **não** dispara o hook (regressão importante: matcher antigo disparava).
+
+#### Prompt (copy-paste)
+
+> Gere um ícone SVG simples para o projeto tray-api-claude-plugin.
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **NÃO** dispara — "tray" aparece no nome do projeto, mas não há `api.*tray`/`tray.*api`/`api_address`/etc. correlacionado **na pergunta** (o nome do projeto contém "tray-api" mas como hífen e o regex usa `.*` então pode acabar disparando — registrar o resultado real).
+2. A IA gera um SVG sem injeção de contexto.
+
+> **Nota:** este cenário é um caso de borda. O matcher novo `api.*tray|tray.*api` pode disparar pelo trecho "tray-api" no nome do projeto. Se disparar, anotar nas observações — revisar matcher.
+
+#### Checklist de verificação
+
+- [ ] **Hook NÃO disparou** (resultado ideal)
+- [ ] **Caso disparou:** anotar em "Observações" — pode ser caso de borda do matcher
+- [ ] **Resposta sem contexto irrelevante da Tray**
+
+#### Observações
+
+```
+```
+
+---
+
+### 4.3 — "Tray de comida" em CSS
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 4 — Hooks: falsos positivos
+**O que valida:** "tray" como palavra comum (bandeja) **não** dispara o hook.
+
+#### Prompt (copy-paste)
+
+> Tenho um componente React de bandeja (tray) de comida. Como estilizo o background com CSS?
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **NÃO** dispara — sem palavras-chave da API.
+2. A IA responde sobre CSS, sem injeção da Tray.
+
+#### Checklist de verificação
+
+- [ ] **Hook NÃO disparou**
+- [ ] **Resposta sem contexto da Tray**
+- [ ] **A IA respondeu o que foi pedido:** CSS/styling
+
+#### Observações
+
+```
+```
+
+---
+
+### 4.4 — Lib de UI chamada Tray
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 4 — Hooks: falsos positivos
+**O que valida:** "Tray" como nome próprio de outra lib **não** dispara o hook.
+
+#### Prompt (copy-paste)
+
+> Existe uma lib de UI chamada Tray para mobile? Tem alternativa em React Native?
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **NÃO** dispara — sem palavras-chave da API Tray.
+2. A IA responde sobre libs de UI, sem injeção de contexto da Tray.
+
+#### Checklist de verificação
+
+- [ ] **Hook NÃO disparou**
+- [ ] **Resposta sem contexto da API Tray**
+- [ ] **A IA não confundiu com a plataforma de e-commerce**
+
+#### Observações
+
+```
+```
+````
