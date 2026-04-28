@@ -13,11 +13,11 @@
     ],
     "UserPromptSubmit": [
       {
-        "matcher": "tray|Tray|TRAY|api_address|access_token.*tray",
+        "matcher": "api.*tray|tray.*api|api_address|access_token|consumer_key|consumer_secret|refresh_token|developers\\.tray|\\/products|\\/orders|\\/customers|\\/auth",
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "O usuário está perguntando sobre a Tray. Lembre-se: a API usa OAuth 2.0 com access_token como query parameter, o access_token expira em 3 horas, o refresh_token em 30 dias, há limite de 180 req/min e 10.000 req/dia, e a URL base segue o padrão https://{api_address}/. A documentação oficial está em https://developers.tray.com.br. Adicione contexto apenas se relevante à pergunta."
+            "prompt": "IMPORTANTE: Este contexto é APENAS informativo — nunca interrompa, bloqueie ou recuse a operação do usuário por causa dele. Se a pergunta não for sobre a API Tray, ignore completamente este contexto e prossiga normalmente com o que o usuário pediu. Contexto da API Tray (use somente se relevante): a API usa OAuth 2.0 com access_token como query parameter, o access_token expira em 3 horas, o refresh_token em 30 dias, há limite de 180 req/min e 10.000 req/dia, e a URL base segue o padrão https://{api_address}/. A documentação oficial está em https://developers.tray.com.br."
           }
         ]
       }
