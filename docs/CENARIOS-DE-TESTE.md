@@ -816,3 +816,228 @@ A IA deve:
 ```
 ```
 ````
+````markdown
+## Bloco 7 — `PostToolUse` (Write/Edit/Bash)
+
+> *Aplicável apenas a Claude Code e Cursor.* Testa os dois hooks `PostToolUse`: 7A após `Write|Edit` (segurança/qualidade do código gerado), 7B após `Bash` (diagnóstico de respostas HTTP da Tray).
+
+### Sub-grupo 7A — `Write|Edit`
+
+#### 7.1 — Tentar hardcodar access_token
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7A — Write|Edit
+**O que valida:** após gerar código com `access_token` literal, o hook alerta para usar env vars.
+
+##### Prompt (copy-paste)
+
+> Cria um arquivo `tray.js` que faça GET /products na minha loja Tray. Pode hardcodar o token por enquanto, depois eu refatoro.
+
+##### Resultado esperado
+
+1. A IA usa `Write` para criar `tray.js` (possivelmente com token literal, conforme pedido).
+2. Após o `Write`, hook `PostToolUse` dispara e alerta:
+   - "access_token… variáveis de ambiente"
+3. A IA, na resposta seguinte, recomenda usar `process.env.TRAY_ACCESS_TOKEN`.
+
+##### Checklist de verificação
+
+- [ ] **`Write` foi executado**
+- [ ] **Hook `PostToolUse` disparou** após o `Write`
+- [ ] **Texto do alerta menciona "variáveis de ambiente"**
+- [ ] **A IA, na resposta, sugeriu refatorar para env vars**
+
+##### Observações
+
+```
+```
+
+---
+
+#### 7.2 — Falta da chave-envelope em POST
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7A — Write|Edit
+**O que valida:** após gerar código com body JSON sem a chave do recurso (`{"Product": {...}}`), o hook alerta.
+
+##### Prompt (copy-paste)
+
+> Cria um script que faz POST /products na Tray com body = { name: 'Tênis', price: 199 } (JSON cru, sem wrapping).
+
+##### Resultado esperado
+
+1. A IA pode tentar criar o script literal como pedido (body cru).
+2. Após o `Write`, hook `PostToolUse` dispara e alerta sobre ausência da chave `{"Product": {...}}`.
+3. A IA corrige (ou explica que precisa do envelope).
+
+##### Checklist de verificação
+
+- [ ] **`Write` foi executado**
+- [ ] **Hook `PostToolUse` disparou** após o `Write`
+- [ ] **Texto do alerta menciona chave-envelope (`{"Product": {...}}`, `{"Order": {...}}`, etc.)**
+- [ ] **A IA corrigiu o body para incluir a chave-envelope**
+
+##### Observações
+
+```
+```
+
+---
+
+### Sub-grupo 7B — `Bash`
+
+#### 7.3 — HTTP 401 (token inválido/expirado)
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7B — Bash
+**O que valida:** após `Bash` cuja saída tem HTTP 401 da Tray, o hook diagnostica e orienta.
+
+##### Prompt (copy-paste)
+
+> Roda este curl: `curl -i 'https://abc.commercesuite.com.br/products?access_token=invalid'` e me explica o resultado.
+
+##### Resultado esperado
+
+1. A IA executa via `Bash` o `curl`.
+2. Saída tem `HTTP/1.1 401` e provavelmente `error_code: 1099`.
+3. Hook `PostToolUse` (matcher `Bash`) dispara e orienta:
+   - "HTTP 401 — `access_token` expirado/inválido"
+   - "renovar via `refresh_token`"
+4. A IA explica e sugere a renovação.
+
+##### Checklist de verificação
+
+- [ ] **`Bash` foi executado e retornou HTTP 401**
+- [ ] **Hook `PostToolUse` (Bash) disparou**
+- [ ] **Texto do alerta menciona "HTTP 401" e "refresh_token"**
+- [ ] **A IA explicou ao usuário e sugeriu renovação**
+
+##### Observações
+
+```
+```
+
+---
+
+#### 7.4 — HTTP 429 (rate limit)
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7B — Bash
+**O que valida:** após `Bash` cuja saída tem HTTP 429, o hook orienta sobre backoff.
+
+##### Prompt (copy-paste)
+
+> Roda um loop com 200 requisições para GET /products da minha loja Tray e me mostra o que aconteceu nas últimas 20 respostas.
+
+##### Resultado esperado
+
+1. A IA executa um loop via `Bash`. As últimas respostas devem retornar HTTP 429.
+2. Hook `PostToolUse` (Bash) dispara e orienta:
+   - "HTTP 429 — rate limit (180 req/min, 10.000 req/dia)"
+   - "backoff exponencial"
+3. A IA implementa backoff ou agrupa requisições.
+
+##### Checklist de verificação
+
+- [ ] **`Bash` foi executado e retornou HTTP 429 em pelo menos uma das requisições**
+- [ ] **Hook `PostToolUse` (Bash) disparou**
+- [ ] **Texto do alerta menciona "rate limit", "180 req/min" e "backoff"**
+- [ ] **A IA implementou backoff exponencial ou explicou a estratégia**
+
+##### Observações
+
+```
+```
+
+---
+
+#### 7.5 — HTTP 400 (campo obrigatório / formato inválido)
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7B — Bash
+**O que valida:** após `Bash` cuja saída tem HTTP 400 com mensagem de campo, o hook sugere `validate.mjs`.
+
+##### Prompt (copy-paste)
+
+> Roda este curl para criar um produto na Tray: `curl -X POST 'https://abc.commercesuite.com.br/products?access_token=TOKEN' -d '{"Product": {"price": 99}}'` e mostra o resultado.
+
+##### Resultado esperado
+
+1. A IA executa via `Bash`. Saída: HTTP 400 com mensagem sobre `name` obrigatório.
+2. Hook `PostToolUse` (Bash) dispara e orienta:
+   - "HTTP 400 — campo obrigatório / formato inválido"
+   - "rodar `skills/produtos/scripts/validate.mjs` antes da próxima tentativa"
+3. A IA roda `validate.mjs` localmente, vê que falta `name`, corrige.
+
+##### Checklist de verificação
+
+- [ ] **`Bash` foi executado e retornou HTTP 400**
+- [ ] **Hook `PostToolUse` (Bash) disparou**
+- [ ] **Texto do alerta sugere `validate.mjs`**
+- [ ] **A IA rodou o validador localmente e identificou o campo faltando**
+
+##### Observações
+
+```
+```
+
+---
+
+#### 7.6 — HTTP 404 (URL base errada / `api_address` incorreto)
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7B — Bash
+**O que valida:** após `Bash` apontando para domínio Tray genérico, o hook orienta sobre `api_address`.
+
+##### Prompt (copy-paste)
+
+> Roda este curl: `curl -i 'https://api.tray.com.br/products?access_token=TOKEN'` (sem usar o api_address da loja, usei o domínio público) e me explica o erro.
+
+##### Resultado esperado
+
+1. A IA executa via `Bash`. Saída: HTTP 404 ou similar.
+2. Hook `PostToolUse` (Bash) dispara e orienta:
+   - "{api_address} é específico por loja, retornado no callback OAuth"
+3. A IA explica que cada loja tem seu próprio `api_address`.
+
+##### Checklist de verificação
+
+- [ ] **`Bash` foi executado e retornou HTTP 404**
+- [ ] **Hook `PostToolUse` (Bash) disparou**
+- [ ] **Texto do alerta menciona "{api_address}" e "específico por loja"**
+- [ ] **A IA explicou que `api_address` vem do callback OAuth**
+
+##### Observações
+
+```
+```
+
+---
+
+#### 7.7 — Bash sem chamada à Tray (regressão)
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7B — Bash
+**O que valida:** o hook `PostToolUse` (Bash) **NÃO** responde quando o comando não é da API Tray — fica calado, conforme instrução do prompt do hook.
+
+##### Prompt (copy-paste)
+
+> Roda `ls -la` no diretório atual e me mostra o que tem aqui.
+
+##### Resultado esperado
+
+1. A IA executa `ls -la` via `Bash`. Saída é a listagem de arquivos do diretório.
+2. Hook `PostToolUse` (Bash) **NÃO** responde — saída não tem chamada à Tray nem código HTTP da Tray.
+3. A IA mostra o resultado normalmente.
+
+##### Checklist de verificação
+
+- [ ] **`Bash` foi executado**
+- [ ] **Hook `PostToolUse` (Bash) NÃO disparou** *(regressão — não pode poluir respostas não-Tray)*
+- [ ] **A IA mostrou a saída normalmente**
+
+##### Observações
+
+```
+```
+````
