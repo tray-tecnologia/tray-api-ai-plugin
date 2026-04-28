@@ -752,3 +752,67 @@ A IA deve:
 ```
 ```
 ````
+````markdown
+## Bloco 6 — Hooks: regressão (nunca interrompe)
+
+> *Aplicável apenas a Claude Code e Cursor.* Testa que mesmo quando o hook `UserPromptSubmit` dispara, ele é APENAS informativo — nunca interrompe, bloqueia ou contamina respostas para pedidos não-Tray.
+
+### 6.1 — Hook dispara mas pedido é não-Tray
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 6 — Hooks: regressão
+**O que valida:** prompt com `api.*tray` que pede explicitamente algo não-Tray.
+
+#### Prompt (copy-paste)
+
+> Já usei a API Tray no passado, mas agora preciso aprender autenticação genérica em Express com Passport.js. Me explica do zero, sem mencionar Tray.
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **DISPARA** (match em `api.*tray`).
+2. A IA **ignora** o contexto injetado (porque o usuário pediu explicitamente algo genérico) e responde sobre Express + Passport.js.
+3. A resposta **não** menciona OAuth da Tray, `access_token`, `consumer_key` etc.
+
+#### Checklist de verificação
+
+- [ ] **Hook disparou** *(esperado)*
+- [ ] **Resposta foca em Express + Passport.js**
+- [ ] **Resposta NÃO menciona Tray, OAuth Tray, `access_token`, `consumer_key`**
+- [ ] **Hook não interrompeu nem contaminou** *(esta é a regressão crítica)*
+
+#### Observações
+
+```
+```
+
+---
+
+### 6.2 — Pedido principal não-Tray com menção tangencial
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 6 — Hooks: regressão
+**O que valida:** prompt cujo objetivo principal é não-Tray, mas com menção tangencial a `/customers`.
+
+#### Prompt (copy-paste)
+
+> Crie uma função utilitária em JS que valide CPF. Ela vai ser usada num projeto que integra com /customers da Tray no futuro.
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **DISPARA** (match em `/customers`).
+2. A IA entrega **apenas** a função de validação de CPF (algoritmo dos dígitos verificadores), sem cadastrar cliente nem chamar `tray-clientes`.
+3. A resposta menciona o uso futuro mas não desvia para implementação Tray.
+
+#### Checklist de verificação
+
+- [ ] **Hook disparou** *(esperado)*
+- [ ] **A IA entregou apenas a função de validação de CPF**
+- [ ] **A IA NÃO tentou cadastrar cliente na Tray**
+- [ ] **A função aplica algoritmo dos dígitos verificadores** (não só `length === 11`)
+- [ ] **Hook não interrompeu nem contaminou**
+
+#### Observações
+
+```
+```
+````
