@@ -659,3 +659,96 @@ A IA deve:
 ```
 ```
 ````
+## Bloco 5 — Hooks: positivos legítimos
+
+> *Aplicável apenas a Claude Code e Cursor.* Testa que o hook `UserPromptSubmit` dispara em prompts legítimos da API Tray e injeta o contexto OAuth.
+
+### 5.1 — Autenticação na API Tray
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 5 — Hooks: positivos legítimos
+**O que valida:** o gatilho `api.*tray` dispara.
+
+#### Prompt (copy-paste)
+
+> Como faço autenticação na API Tray?
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **DISPARA** — match em `api.*tray`.
+2. Contexto da Tray injetado: aviso "APENAS informativo" + lembretes de OAuth, expiração, rate limit, URL base.
+3. A IA responde sobre OAuth 2.0 de 3 etapas usando a skill `tray-autorizacao`.
+
+#### Checklist de verificação
+
+- [ ] **Hook disparou:** sim, contexto injetado
+- [ ] **Texto do hook começa com "IMPORTANTE: Este contexto é APENAS informativo"**
+- [ ] **Skill correta usada:** `tray-autorizacao`
+- [ ] **A IA explicou o fluxo OAuth de 3 etapas**
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 5.2 — Erro 401 com access_token
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 5 — Hooks: positivos legítimos
+**O que valida:** o gatilho `access_token` dispara mesmo sem mencionar "Tray".
+
+#### Prompt (copy-paste)
+
+> Estou recebendo erro 401 toda vez que tento usar o access_token. O que pode ser?
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **DISPARA** — match em `access_token`.
+2. Contexto da Tray injetado.
+3. A IA explica códigos `1000`–`1099` e sugere renovar via `refresh_token`.
+
+#### Checklist de verificação
+
+- [ ] **Hook disparou:** sim
+- [ ] **A IA reconheceu o contexto Tray (mesmo sem o usuário mencionar)**
+- [ ] **A IA explicou códigos 1000–1099 e renovação via refresh_token**
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 5.3 — Configurar refresh_token
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 5 — Hooks: positivos legítimos
+**O que valida:** o gatilho `refresh_token` dispara.
+
+#### Prompt (copy-paste)
+
+> Como configuro renovação automática do refresh_token na minha integração?
+
+#### Resultado esperado
+
+1. Hook `UserPromptSubmit` **DISPARA** — match em `refresh_token`.
+2. A IA usa `tray-autorizacao` e explica `GET {api_address}/auth?refresh_token=…` + expiração de 30 dias do `refresh_token`.
+
+#### Checklist de verificação
+
+- [ ] **Hook disparou:** sim
+- [ ] **Skill correta:** `tray-autorizacao`
+- [ ] **Endpoint correto:** `GET {api_address}/auth?refresh_token=…`
+- [ ] **Mencionou expiração de 30 dias**
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+````
