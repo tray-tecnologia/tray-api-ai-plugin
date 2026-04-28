@@ -1041,3 +1041,120 @@ A IA deve:
 ```
 ```
 ````
+````markdown
+## Bloco 8 — Smoke test ferramentas secundárias
+
+> Cobertura mínima em ferramentas onde **hooks não são suportados** e onde o plugin é entregue via arquivo de instrução (AGENTS.md / GEMINI.md / `.github/copilot-instructions.md` / regras nativas). Apenas verifica que o contexto é carregado e que a IA acerta o básico.
+
+### 8.1 — Gemini CLI
+
+**Aplicável a:** Gemini CLI
+**Bloco:** 8 — Smoke test
+**O que valida:** `GEMINI.md` é carregado automaticamente e fornece o contexto da API Tray.
+
+#### Prompt (copy-paste)
+
+> Como faço autenticação na API Tray?
+
+#### Resultado esperado
+
+1. Gemini CLI carrega `GEMINI.md` da raiz do repositório.
+2. Resposta menciona OAuth 2.0 de 3 etapas, `consumer_key`/`consumer_secret`/`code`, expiração de 3h do `access_token` e 30 dias do `refresh_token`.
+
+#### Checklist de verificação
+
+- [ ] **`GEMINI.md` foi carregado:** verificar com `gemini --debug` ou similar (se disponível)
+- [ ] **Resposta menciona OAuth de 3 etapas**
+- [ ] **Resposta menciona `consumer_key`, `consumer_secret`, `code`**
+- [ ] **Resposta menciona expiração de 3h e 30 dias**
+
+#### Observações
+
+```
+```
+
+---
+
+### 8.2 — GitHub Copilot (VS Code)
+
+**Aplicável a:** GitHub Copilot
+**Bloco:** 8 — Smoke test
+**O que valida:** `.github/copilot-instructions.md` é consumido nas sugestões do Copilot.
+
+#### Prompt (não é prompt, é gatilho contextual)
+
+> Em um arquivo TypeScript novo, escrever o comentário `// Função para autenticar na API Tray via OAuth` e aceitar a sugestão automática do Copilot.
+
+#### Resultado esperado
+
+1. Copilot sugere uma função que referencia `consumer_key`, `consumer_secret`, `code`, `access_token`.
+2. Sugestão usa `?access_token={token}` como query parameter (não header).
+
+#### Checklist de verificação
+
+- [ ] **Sugestão referencia `consumer_key`, `consumer_secret`, `code`**
+- [ ] **Sugestão usa `access_token` como query parameter**
+- [ ] **Sugestão NÃO usa Authorization header**
+- [ ] **`.github/copilot-instructions.md` está presente no repositório**
+
+#### Observações
+
+```
+```
+
+---
+
+### 8.3 — JetBrains AI Assistant
+
+**Aplicável a:** JetBrains AI Assistant (IntelliJ / WebStorm / PyCharm / etc.)
+**Bloco:** 8 — Smoke test
+**O que valida:** `.aiassistant/rules/tray-api.md` é detectado como project rule.
+
+#### Prompt (copy-paste)
+
+> Como faço autenticação na API Tray?
+
+#### Resultado esperado
+
+1. JetBrains AI carrega `.aiassistant/rules/tray-api.md` automaticamente.
+2. Resposta menciona OAuth de 3 etapas e os mesmos elementos do 8.1.
+
+#### Checklist de verificação
+
+- [ ] **A rule foi detectada:** verificar nas Settings → AI Assistant → Project Rules
+- [ ] **Resposta menciona OAuth de 3 etapas**
+- [ ] **Resposta menciona `consumer_key`, `consumer_secret`, `code`**
+
+#### Observações
+
+```
+```
+
+---
+
+### 8.4 — Windsurf (Cascade)
+
+**Aplicável a:** Windsurf (Cascade)
+**Bloco:** 8 — Smoke test
+**O que valida:** rule do Cascade é detectado.
+
+#### Prompt (copy-paste)
+
+> Como faço autenticação na API Tray?
+
+#### Resultado esperado
+
+1. Windsurf detecta a rule do Cascade e carrega o contexto.
+2. Resposta menciona OAuth de 3 etapas e os mesmos elementos do 8.1.
+
+#### Checklist de verificação
+
+- [ ] **A rule foi detectada:** verificar painel Cascade
+- [ ] **Resposta menciona OAuth de 3 etapas**
+- [ ] **Resposta menciona `consumer_key`, `consumer_secret`, `code`**
+
+#### Observações
+
+```
+```
+````
