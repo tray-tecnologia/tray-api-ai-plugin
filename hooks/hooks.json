@@ -6,7 +6,16 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Verifique se o código que acabou de ser escrito contém access_tokens, consumer_keys ou consumer_secrets da Tray hardcoded. Se encontrar, alerte o desenvolvedor para usar variáveis de ambiente. Verifique também se as URLs de endpoint seguem o padrão https://{api_address}/endpoint?access_token={token}. Responda apenas se encontrar algum problema."
+            "prompt": "Analise o código que acabou de ser escrito e verifique APENAS se houver problemas relacionados à API Tray. Se nada do abaixo for aplicável, NÃO responda. Checks: (1) access_token, consumer_key, consumer_secret ou refresh_token aparecendo como literais hardcoded — alerte para usar variáveis de ambiente. (2) URLs de endpoint da Tray fora do padrão https://{api_address}/<recurso>?access_token={token}. (3) Em chamadas POST ou PUT para /products, /orders, /customers, /variants ou outros recursos Tray, o body JSON deve estar envolto na chave do recurso (ex.: {\"Product\": {...}}, {\"Order\": {...}}, {\"Customer\": {...}}) — se faltar, alerte o desenvolvedor. (4) Se o código gerar payload para um recurso que tem skills/<recurso>/scripts/validate.mjs, sugira rodar o validador antes de testar contra a API real. Responda apenas se encontrar algum problema."
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Analise a saída do comando que acabou de ser executado. Se NÃO houver chamada à API Tray (curl/node/wget contra api_address ou developers.tray.com.br) e nem código de erro HTTP da Tray, NÃO responda. Se houver, identifique respostas problemáticas e oriente: (1) HTTP 429 — rate limit atingido (180 req/min, 10.000 req/dia); sugira backoff exponencial ou agrupar requisições. (2) HTTP 401 — access_token expirado (3h) ou inválido; sugira renovar via refresh_token (GET https://{api_address}/auth?refresh_token={token}). (3) HTTP 400 com mensagem sobre campo obrigatório, formato inválido ou validação — sugira rodar skills/<recurso>/scripts/validate.mjs com o payload antes de tentar de novo. (4) HTTP 404 em endpoint Tray — verifique a URL base ({api_address} é específico por loja, retornado no callback OAuth). Responda apenas se um desses cenários ocorreu."
           }
         ]
       }
