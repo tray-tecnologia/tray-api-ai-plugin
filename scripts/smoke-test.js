@@ -3,7 +3,7 @@
  * Smoke test do plugin tray-api-claude
  *
  * Valida a estrutura do plugin sem precisar de credenciais:
- *   1. JSON válido em plugin.json, marketplace.json e hooks.json
+ *   1. JSON válido em manifests e hooks
  *   2. Frontmatter obrigatório em skills, agents e commands
  *   3. Campo `name` presente em todos os arquivos com frontmatter
  *   4. Sem rotas duplicadas dentro de referencia-api.md
@@ -48,8 +48,12 @@ function section(title) {
 section('1. Validação de JSON');
 
 const jsonFiles = [
+  'package.json',
   '.claude-plugin/plugin.json',
   '.claude-plugin/marketplace.json',
+  '.cursor-plugin/plugin.json',
+  '.codex-plugin/plugin.json',
+  'gemini-extension.json',
   'hooks/hooks.json',
 ];
 

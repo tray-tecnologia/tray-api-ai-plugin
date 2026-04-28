@@ -5,6 +5,10 @@ description: >
   gerenciar os status personalizados de pedidos da loja, incluindo listagem, consulta
   individual, criação, atualização e exclusão. Permite configurar nome, descrição,
   cores e tipo do status para personalizar o fluxo de pedidos.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: status de pedido, status customizado,
+  GET /order_statuses, POST /order_statuses, criar status, pipeline de pedido,
+  fluxo de status, cor de status ou tipo de status (entregue, cancelado, etc.).
 when_not_to_use: >
   Não use para atualizar o status de um pedido específico (use tray-pedidos
   PUT /orders/:id). Use apenas para gerenciar os tipos/configurações de status

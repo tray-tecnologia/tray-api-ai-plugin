@@ -6,6 +6,10 @@ description: >
   listagem geral, consulta por ID, consulta por pedido, criação e atualização.
   Inclui campos como número, série, chave de acesso, CFOP, link do DANFE e
   valor total, essenciais para integração com ERPs e sistemas fiscais.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: nota fiscal, NF-e, DANFE, chave de acesso,
+  CFOP, número de NF, GET /fiscal_notes, POST /fiscal_notes, integração com ERP fiscal,
+  emitir nota ou vincular NF a pedido.
 when_not_to_use: >
   Não use para criar pedidos (use tray-pedidos) nem para dados de pagamento (use
   tray-pagamentos). Use apenas para registrar ou consultar NF-e associadas a pedidos.

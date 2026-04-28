@@ -4,6 +4,10 @@ description: >
   API de Informação Adicional da Tray. Utilize quando o desenvolvedor
   precisar gerenciar campos customizados de informação que podem ser vinculados
   a produtos, incluindo criação, atualização, vinculação e exclusão.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: informação adicional, campo customizado,
+  additional_info, campo extra de produto, POST /additional_infos,
+  vincular informação adicional a produto ou campo personalizado de catálogo.
 when_not_to_use: >
   Não use para características com filtro de vitrine (use tray-caracteristicas) nem para
   variações com estoque separado (use tray-variacoes).

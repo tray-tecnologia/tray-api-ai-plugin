@@ -5,6 +5,10 @@ description: >
   precisar gerenciar variantes de produtos (SKUs) como diferentes tamanhos, cores
   ou modelos. Inclui listagem, consulta, cadastro, atualização, exclusão e
   informações sobre limitações de variações por produto.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: variação, SKU, tamanho, cor, modelo,
+  atributo de produto, POST /variants, PUT /variants, estoque por variação,
+  preço de variação, código EAN de SKU ou limitação de variantes por produto.
 when_not_to_use: >
   Não use para o produto pai (use tray-produtos) nem para características informativas
   sem estoque separado (use tray-caracteristicas). Use para SKUs com atributos como

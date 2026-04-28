@@ -5,6 +5,10 @@ description: >
   Permite criar, editar, excluir e consultar cupons, além de
   gerenciar relacionamentos com clientes, produtos, categorias,
   marcas e fretes. Contém 21 endpoints.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: cupom, desconto, código promocional,
+  coupon, discount_coupons, POST /discount_coupons, cupom por cliente,
+  cupom por produto, cupom por categoria, percentual de desconto ou valor fixo de desconto.
 when_not_to_use: >
   Não use para preços B2B permanentes por grupo de cliente (use tray-listas-preco-b2b).
   Use para descontos por código aplicados no checkout.

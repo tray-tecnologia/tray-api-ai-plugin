@@ -5,6 +5,9 @@ description: >
   gerenciar kits (combos/bundles) de produtos, incluindo listagem, consulta individual,
   criação e atualização. Permite agrupar múltiplos produtos em um único kit com
   quantidades específicas, ideal para combos promocionais e pacotes de produtos.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: kit, combo, bundle, pacote de produtos,
+  GET /kits, POST /kits, grupo de produtos, venda casada ou produto composto.
 when_not_to_use: >
   Não use para produtos simples (use tray-produtos) nem para variações/SKUs (use
   tray-variacoes). Use apenas para combos ou bundles de múltiplos produtos.

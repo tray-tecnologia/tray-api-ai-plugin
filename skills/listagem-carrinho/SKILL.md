@@ -4,6 +4,10 @@ description: >
   Nova API de Listagem de Carrinho da Tray. Utilize quando o desenvolvedor
   precisar listar todos os carrinhos de compra da loja com paginação. Endpoint
   separado da API principal de carrinho.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: listar carrinhos, listagem de carrinhos,
+  GET /carts/list, carrinhos abandonados em massa, paginação de carrinhos ou
+  relatório de carrinhos.
 when_not_to_use: >
   Não use para criar, consultar individualmente, atualizar ou excluir carrinhos (use
   tray-carrinho-compras). Use apenas para listar todos os carrinhos da loja.

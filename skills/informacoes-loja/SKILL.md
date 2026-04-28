@@ -4,6 +4,9 @@ description: >
   API de Informações da Loja da Tray. Utilize quando o desenvolvedor
   precisar consultar dados de configuração da loja como nome, domínio, CNPJ,
   endereço, plano contratado e status da loja.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: informações da loja, dados da loja, GET /store,
+  domínio da loja, CNPJ da loja, plano Tray, api_address, nome da loja ou status da loja.
 when_not_to_use: >
   Não use para alterar dados da loja — esta API é somente leitura. Para usuários
   administrativos, use tray-usuarios.

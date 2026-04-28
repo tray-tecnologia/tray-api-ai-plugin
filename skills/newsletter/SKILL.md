@@ -4,6 +4,10 @@ description: >
   API de Newsletter da Tray. Utilize quando o desenvolvedor precisar
   gerenciar assinaturas de newsletter da loja, incluindo listagem de assinantes,
   inscrição e confirmação de cadastro.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: newsletter, assinatura de e-mail, opt-in,
+  GET /newsletters, POST /newsletters, lista de e-mails, inscrever cliente na newsletter
+  ou gerenciar assinantes.
 when_not_to_use: >
   Não use para dados cadastrais do cliente (use tray-clientes). Use apenas para
   inscrição ou listagem de e-mails da newsletter da loja.

@@ -3,6 +3,9 @@ name: tray-palavras-chave
 description: >
   API de Palavras-Chave da Tray. Utilize quando o desenvolvedor precisar
   consultar palavras-chave de SEO associadas à loja. API somente leitura.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: palavras-chave, SEO, keyword, GET /keywords,
+  termos de busca da loja, otimização de busca ou palavras buscadas na vitrine.
 when_not_to_use: >
   Não use para SEO de produto — campos metatag/shortcut estão em tray-produtos. API
   somente leitura para consultar keywords configuradas na loja.

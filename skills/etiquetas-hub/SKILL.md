@@ -4,6 +4,9 @@ description: >
   API de Etiquetas do HUB da Tray. Utilize quando o desenvolvedor
   precisar criar ou consultar etiquetas de envio através do sistema HUB
   de integração logística da Tray.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: etiqueta HUB, hub label, etiqueta de envio HUB,
+  POST /orders/:id/labels/hub, integração logística HUB, rastreio HUB ou gerar etiqueta HUB.
 when_not_to_use: >
   Não use para etiquetas de sistemas externos (use tray-emissores-etiqueta) nem para
   etiquetas do Mercado Livre (use tray-etiquetas-mercado-livre).

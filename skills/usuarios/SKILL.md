@@ -3,6 +3,9 @@ name: tray-usuarios
 description: >
   API de Usuários da Tray. Utilize quando o desenvolvedor precisar
   listar os usuários administrativos da loja. API somente leitura.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: usuário administrativo, usuário da loja,
+  GET /users, listar usuários, administrador da Tray ou user_id da loja.
 when_not_to_use: >
   Não use para clientes da loja (use tray-clientes) nem para parceiros (use
   tray-parceiros). API somente leitura para listar usuários administrativos.

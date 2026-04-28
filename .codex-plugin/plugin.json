@@ -1,0 +1,40 @@
+{
+  "name": "tray-api",
+  "version": "1.1.0",
+  "description": "Plugin de documentação da API Tray para integração e-commerce com agentes de IA.",
+  "author": {
+    "name": "Rodolfo Moraes",
+    "email": "rmoraes@tray.net.br",
+    "url": "https://github.com/adhenawer"
+  },
+  "homepage": "https://developers.tray.com.br",
+  "repository": "https://github.com/tray-tecnologia/tray-api-claude-plugin",
+  "license": "GPL-3.0",
+  "keywords": [
+    "tray",
+    "tray-api",
+    "e-commerce",
+    "integration",
+    "oauth",
+    "webhook",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Tray API",
+    "shortDescription": "Documentação guiada da API Tray para integrações",
+    "longDescription": "Use o plugin Tray API para consultar endpoints, autenticação OAuth, webhooks e boas práticas de integração com a plataforma Tray.",
+    "developerName": "Tray Tecnologia",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Quero integrar meu ERP com a API da Tray.",
+      "Como faço autenticação OAuth 2.0 na Tray?"
+    ],
+    "screenshots": []
+  }
+}

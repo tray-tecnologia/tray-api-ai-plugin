@@ -6,6 +6,10 @@ description: >
   consulta individual, criação, atualização, exclusão, opções de pagamento
   disponíveis e configurações. Suporta múltiplos tipos de pagamento: cartão de
   crédito, boleto bancário, PIX, transferência bancária e depósito.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: pagamento, meio de pagamento, cartão de crédito,
+  boleto, PIX, transferência bancária, depósito, GET /payments, POST /payments,
+  opções de pagamento, configuração de pagamento ou parcelamento.
 when_not_to_use: >
   Não use para notificações de pagamento — elas chegam via webhook do escopo order (use
   tray-webhooks). Use para consultar ou registrar pagamentos associados a pedidos.

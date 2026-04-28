@@ -5,6 +5,10 @@ description: >
   valores de frete e consultar métodos de envio disponíveis. Inclui cálculo de frete
   por CEP com peso e dimensões, listagem de formas de envio configuradas na loja,
   e integração com gateways de frete como Frete-X API para cotação automática.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: calcular frete, cotação de frete, frete por CEP,
+  GET /freights, peso do produto, dimensões para envio, formas de envio disponíveis,
+  prazo de entrega, frete grátis ou Frete-X.
 when_not_to_use: >
   Não use para criar ou configurar métodos de envio (use tray-configuracao-frete). Use
   apenas para calcular frete por CEP ou listar métodos disponíveis.

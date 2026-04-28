@@ -4,6 +4,10 @@ description: >
   API de Imagens de Produtos e Variações da Tray. Utilize quando o
   desenvolvedor precisar fazer upload, atualizar ou remover imagens de produtos
   e variações. Inclui formatos aceitos, método de envio e posicionamento de imagens.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: imagem de produto, upload de imagem, foto do produto,
+  POST /products/:id/images, remover imagem, formato de imagem aceito, imagem de variação,
+  ordenar imagens ou galeria de produto.
 when_not_to_use: >
   Não use para dados básicos do produto como preço ou estoque (use tray-produtos). Para
   imagens de variações, use o endpoint /variants/:id/images desta mesma skill.

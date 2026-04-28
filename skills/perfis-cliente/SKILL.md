@@ -5,6 +5,10 @@ description: >
   gerenciar perfis (grupos/segmentos) de clientes da loja, incluindo criação, consulta,
   atualização, exclusão e associação/desassociação de clientes a perfis. Útil para
   segmentação de clientes, preços diferenciados (B2B/B2C) e regras de desconto por grupo.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: perfil de cliente, grupo de clientes, segmento,
+  customer profile, GET /customer_profiles, POST /customer_profiles, B2B vs B2C,
+  associar cliente a perfil ou desconto por grupo de clientes.
 when_not_to_use: >
   Não use para dados cadastrais do cliente (use tray-clientes) nem para listas de preço
   B2B (use tray-listas-preco-b2b).

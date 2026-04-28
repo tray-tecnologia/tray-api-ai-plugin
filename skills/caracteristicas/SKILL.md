@@ -5,6 +5,10 @@ description: >
   precisar gerenciar características (propriedades) dos produtos, incluindo cadastro,
   atualização, consulta e exclusão. Permite criar características globais reutilizáveis
   e associar valores específicos a cada produto (ex: cor, tamanho, material, voltagem).
+when_to_use: >
+  Use quando o desenvolvedor mencionar: característica, propriedade de produto,
+  atributo customizado, POST /products/:id/characteristics, material, voltagem,
+  campo técnico de produto ou especificação técnica.
 when_not_to_use: >
   Não use para variações/SKUs com estoque separado (use tray-variacoes). Características
   são informativas e de filtro de vitrine; para opções que geram SKUs distintos, use

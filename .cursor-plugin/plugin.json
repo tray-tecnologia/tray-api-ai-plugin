@@ -1,0 +1,25 @@
+{
+  "name": "tray-api",
+  "displayName": "Tray API",
+  "description": "Plugin de documentação da API Tray com skills, agentes e comandos para integração.",
+  "version": "1.1.0",
+  "author": {
+    "name": "Rodolfo Moraes",
+    "email": "rmoraes@tray.net.br"
+  },
+  "homepage": "https://developers.tray.com.br",
+  "repository": "https://github.com/tray-tecnologia/tray-api-claude-plugin",
+  "license": "GPL-3.0",
+  "keywords": [
+    "tray",
+    "e-commerce",
+    "api",
+    "oauth",
+    "webhooks",
+    "skills"
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "commands": "./commands/",
+  "hooks": "./hooks/hooks.json"
+}

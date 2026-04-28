@@ -1,4 +1,4 @@
-# Plugin Tray API para Claude Code
+# Plugin Tray API para ferramentas de IA
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-blueviolet)](https://code.claude.com/docs/pt/plugins)
@@ -6,22 +6,98 @@
 
 Plugin completo para integração com as APIs da Tray. Acelera o desenvolvimento de aplicativos e-commerce por parceiros e comunidade na plataforma Tray, fornecendo documentação detalhada de **150+ endpoints**, fluxos de autenticação OAuth, webhooks e boas práticas de integração.
 
+Funciona nativamente com **Claude Code**, **Cursor**, **OpenAI Codex**, **Google Gemini CLI**, **GitHub Copilot**, **JetBrains AI Assistant** e **Windsurf**.
+
 ## Pré-requisitos
 
-- [Claude Code](https://claude.com/claude-code) instalado
-- Credenciais de API Tray (Consumer Key e Consumer Secret) — obtidas em [developers.tray.com.br
-](https://developers.tray.com.br/#criando-seu-aplicativo)
-## Instalação
+- Credenciais de API Tray (Consumer Key e Consumer Secret) — obtidas em [developers.tray.com.br](https://developers.tray.com.br/#criando-seu-aplicativo)
+
+## Instalação por ferramenta
+
+### Instalação via pacote Node (recomendado para projetos locais)
+
+Adicione o plugin como dependência de desenvolvimento no seu repositório:
 
 ```bash
-# Via marketplace próprio
+npm install --save-dev github:tray-tecnologia/tray-api-claude-plugin
+# ou
+pnpm add -D github:tray-tecnologia/tray-api-claude-plugin
+# ou
+bun add -d github:tray-tecnologia/tray-api-claude-plugin
+```
+
+O pacote será instalado em `node_modules/@tray-tecnologia/tray-api-plugin/` e pode
+ser referenciado pelas ferramentas que suportam contexto por arquivos locais.
+
+### Claude Code (instalação nativa via plugin)
+
+```bash
+# Via marketplace
 /plugin marketplace add tray-tecnologia/tray-api-claude-plugin
 /plugin install tray-api@tray-plugins
 
-# Desenvolvimento local (clone o repositório)
+# Desenvolvimento local
 git clone https://github.com/tray-tecnologia/tray-api-claude-plugin.git
 claude --plugin-dir ./tray-api-claude-plugin
 ```
+
+### Cursor
+
+Opção 1 (recomendada): instalar via pacote Node e apontar o rule file para o projeto.
+
+```bash
+cp node_modules/@tray-tecnologia/tray-api-plugin/.cursor/rules/tray-api.mdc .cursor/rules/tray-api.mdc
+```
+
+Opção 2: clone ou submódulo no projeto de integração. O arquivo `.cursor/rules/tray-api.mdc` é carregado automaticamente quando o Cursor abre o repositório.
+
+```bash
+git submodule add https://github.com/tray-tecnologia/tray-api-claude-plugin.git .tray-plugin
+```
+
+O Cursor passa a ter acesso a todos os skills via `@skills/` e aos agentes via `@agents/`.
+
+### OpenAI Codex CLI
+
+Opção 1 (recomendada): usar o pacote instalado e importar o `AGENTS.md` no contexto do seu projeto.
+
+```bash
+cp node_modules/@tray-tecnologia/tray-api-plugin/AGENTS.md ./
+```
+
+Opção 2: clone ou submódulo. O `AGENTS.md` na raiz é carregado automaticamente pelo Codex.
+
+```bash
+git submodule add https://github.com/tray-tecnologia/tray-api-claude-plugin.git .tray-plugin
+```
+
+### Google Gemini CLI
+
+Opção 1 (recomendada): usar o pacote instalado e copiar o contexto `GEMINI.md`.
+
+```bash
+cp node_modules/@tray-tecnologia/tray-api-plugin/GEMINI.md ./
+```
+
+Opção 2: clone ou submódulo. O `GEMINI.md` na raiz é carregado automaticamente via sistema hierárquico de contexto.
+
+```bash
+git submodule add https://github.com/tray-tecnologia/tray-api-claude-plugin.git .tray-plugin
+# Verificar contexto carregado:
+/memory show
+```
+
+### GitHub Copilot (VS Code)
+
+O arquivo `.github/copilot-instructions.md` deste repositório é reconhecido automaticamente pelo Copilot quando o projeto é aberto no VS Code.
+
+### JetBrains AI Assistant
+
+O arquivo `.aiassistant/rules/tray-api.md` é detectado automaticamente como project rule pelo JetBrains AI Assistant.
+
+### Windsurf (Cascade)
+
+O `AGENTS.md` na raiz é reconhecido automaticamente pelo Cascade como regra always-on.
 
 ## Componentes
 

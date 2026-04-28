@@ -4,6 +4,10 @@ description: >
   API de Produtos Vendidos da Tray. Utilize quando o desenvolvedor
   precisar consultar o histórico de vendas e analytics de produtos vendidos
   na loja. API somente leitura com filtros de data.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: produtos vendidos, analytics de vendas,
+  histórico de vendas, GET /sold_products, relatório de produtos, mais vendidos,
+  performance de produto ou filtrar vendas por período.
 when_not_to_use: >
   Não use para listar pedidos em aberto (use tray-pedidos). API somente leitura para
   analytics de produtos vendidos.

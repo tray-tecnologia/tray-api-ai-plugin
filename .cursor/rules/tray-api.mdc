@@ -1,0 +1,73 @@
+---
+description: >
+  Regras e documentação da API Tray. Aplica quando o desenvolvedor trabalhar
+  com autenticação OAuth, produtos, pedidos, clientes, webhooks, frete,
+  pagamentos ou qualquer outro recurso da plataforma Tray. Inclui convenções
+  obrigatórias de autenticação, formato de payload, rate limit e índice completo
+  de skills com documentação detalhada de cada endpoint.
+alwaysApply: false
+---
+
+# Tray API — Regras do projeto
+
+## Convenções obrigatórias
+
+- `access_token` como query parameter em toda chamada: `?access_token={token}`.
+- URL base: `https://{api_address}/` (retornada no callback OAuth, varia por loja).
+- `access_token` expira em 3 h; `refresh_token` expira em 30 dias.
+- Payload JSON envolto na chave do recurso: `{"Product": {...}}`, `{"Order": {...}}`.
+- Rate limit: 180 req/min e 10.000 req/dia — tratar HTTP 429 com retry exponencial.
+- Paginação máxima: 50 itens por requisição.
+- Nunca escrever `access_token`, `consumer_key` ou `consumer_secret` como literais.
+
+## Documentação por recurso
+
+Para obter a documentação detalhada de um recurso, @-mencione o SKILL.md
+correspondente no chat:
+
+| Recurso | Arquivo para @-mencionar |
+|---------|--------------------------|
+| OAuth / access_token | `skills/autorizacao/SKILL.md` |
+| Webhooks | `skills/webhooks/SKILL.md` |
+| Produtos | `skills/produtos/SKILL.md` |
+| Variações / SKUs | `skills/variacoes/SKILL.md` |
+| Imagens de produtos | `skills/imagens-produtos/SKILL.md` |
+| Categorias | `skills/categorias/SKILL.md` |
+| Marcas | `skills/marcas/SKILL.md` |
+| Kits / combos | `skills/kits/SKILL.md` |
+| Características | `skills/caracteristicas/SKILL.md` |
+| Informações adicionais | `skills/informacoes-adicionais/SKILL.md` |
+| Pedidos | `skills/pedidos/SKILL.md` |
+| Status de pedido | `skills/status-pedido/SKILL.md` |
+| Notas fiscais | `skills/notas-fiscais/SKILL.md` |
+| Frete (cálculo) | `skills/frete/SKILL.md` |
+| Frete (configuração) | `skills/configuracao-frete/SKILL.md` |
+| Etiquetas HUB | `skills/etiquetas-hub/SKILL.md` |
+| Etiquetas Mercado Livre | `skills/etiquetas-mercado-livre/SKILL.md` |
+| Emissores de etiqueta | `skills/emissores-etiqueta/SKILL.md` |
+| Carrinho de compras | `skills/carrinho-compras/SKILL.md` |
+| Listagem de carrinhos | `skills/listagem-carrinho/SKILL.md` |
+| Clientes | `skills/clientes/SKILL.md` |
+| Endereços de cliente | `skills/enderecos-cliente/SKILL.md` |
+| Perfis de cliente | `skills/perfis-cliente/SKILL.md` |
+| Pagamentos | `skills/pagamentos/SKILL.md` |
+| Cupons | `skills/cupons/SKILL.md` |
+| Listas de preço B2B | `skills/listas-preco-b2b/SKILL.md` |
+| Informações da loja | `skills/informacoes-loja/SKILL.md` |
+| Scripts externos | `skills/scripts-externos/SKILL.md` |
+| Multi-CD | `skills/multicd/SKILL.md` |
+| Parceiros | `skills/parceiros/SKILL.md` |
+| Usuários | `skills/usuarios/SKILL.md` |
+| Produtos vendidos | `skills/produtos-vendidos/SKILL.md` |
+| Palavras-chave | `skills/palavras-chave/SKILL.md` |
+| Newsletter | `skills/newsletter/SKILL.md` |
+
+## Agentes para fluxos complexos
+
+| Tarefa | Arquivo para @-mencionar |
+|--------|--------------------------|
+| Setup OAuth e configuração inicial | `agents/configuracao-aplicativo.md` |
+| Gestão em massa de catálogo | `agents/gestor-catalogo.md` |
+| Ciclo de pedidos, NF-e, etiquetas | `agents/gestor-pedidos.md` |
+| Diagnóstico de erros e debugging | `agents/debug-integracao.md` |
+| Migração de Shopify/WooCommerce/etc. | `agents/assistente-migracao.md` |

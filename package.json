@@ -1,0 +1,50 @@
+{
+  "name": "@tray-tecnologia/tray-api-plugin",
+  "version": "1.1.0",
+  "description": "Plugin de documentação da API Tray para agentes de IA.",
+  "type": "module",
+  "license": "GPL-3.0",
+  "homepage": "https://developers.tray.com.br",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tray-tecnologia/tray-api-claude-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tray-tecnologia/tray-api-claude-plugin/issues"
+  },
+  "keywords": [
+    "tray",
+    "tray-api",
+    "e-commerce",
+    "api",
+    "plugin",
+    "skills",
+    "agents",
+    "oauth",
+    "webhooks"
+  ],
+  "files": [
+    "AGENTS.md",
+    "GEMINI.md",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "skills/**",
+    "agents/**",
+    "commands/**",
+    "hooks/**",
+    "scripts/**",
+    ".claude-plugin/**",
+    ".cursor-plugin/**",
+    ".codex-plugin/**",
+    ".cursor/rules/**",
+    ".github/copilot-instructions.md",
+    ".aiassistant/rules/**",
+    "gemini-extension.json"
+  ],
+  "scripts": {
+    "smoke": "node scripts/smoke-test.js",
+    "version:check": "node scripts/sync-version.js --check",
+    "version:set": "node scripts/sync-version.js"
+  }
+}

@@ -4,6 +4,10 @@ description: >
   API de Emissores de Etiqueta da Tray. Utilize quando o desenvolvedor
   precisar integrar geração de etiquetas de envio, cadastrando URLs de etiqueta
   e vinculando-as a pedidos.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: emissor de etiqueta, label issuer,
+  cadastrar URL de etiqueta, vincular etiqueta a pedido, POST /label_issuers,
+  integração de etiqueta de envio ou sistema de emissão de etiquetas.
 when_not_to_use: >
   Não use para etiquetas do HUB interno da Tray (use tray-etiquetas-hub) nem para
   etiquetas do Mercado Livre (use tray-etiquetas-mercado-livre).

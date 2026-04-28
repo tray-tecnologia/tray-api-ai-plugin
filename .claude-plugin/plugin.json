@@ -1,6 +1,6 @@
 {
   "name": "tray-api",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Plugin completo para integração com as APIs da Tray. Acelera o desenvolvimento de aplicativos e-commerce por parceiros e comunidade na plataforma Tray, fornecendo documentação detalhada de todos os endpoints, fluxos de autenticação OAuth, webhooks e boas práticas de integração.",
   "author": {
     "name": "Rodolfo Moraes",

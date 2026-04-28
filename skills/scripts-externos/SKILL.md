@@ -4,6 +4,10 @@ description: >
   API de Scripts Externos da Tray. Utilize quando o desenvolvedor
   precisar gerenciar scripts JavaScript customizados injetados na vitrine
   da loja, incluindo listagem, cadastro, atualização e exclusão.
+when_to_use: >
+  Use quando o desenvolvedor mencionar: script externo, JavaScript na vitrine,
+  tag de pixel, GET /external_scripts, POST /external_scripts, injetar script,
+  Google Tag Manager, pixel de rastreio ou código customizado na loja.
 when_not_to_use: >
   Não use para webhooks de eventos (use tray-webhooks). Use apenas para injetar scripts
   JavaScript externos na vitrine da loja.
