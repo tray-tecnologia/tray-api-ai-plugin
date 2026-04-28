@@ -436,7 +436,6 @@ A IA deve:
 
 ```
 ```
-````
 ## Bloco 3 — Validação de payload (`validate.mjs` + regras BR)
 
 > Mistura proposital: 3.1 e 3.3 testam o `validate.mjs` rejeitando campos `required` faltantes; 3.2 testa a regra BR de CPF (algoritmo de verificação) que vem do `AGENTS.md` — o `validate.mjs` de `clientes` não tem regex de CPF, apenas `maxLength: 14`.
@@ -542,7 +541,6 @@ A IA deve:
 
 ```
 ```
-````
 ## Bloco 4 — Hooks: falsos positivos
 
 > *Aplicável apenas a Claude Code e Cursor.* Testa que o hook `UserPromptSubmit` **NÃO** dispara em prompts que mencionam "tray" mas não têm relação com a API Tray. O matcher antigo (`tray|Tray|TRAY`) disparava nesses casos; o novo (`api.*tray|tray.*api|api_address|...`) não.
@@ -658,7 +656,6 @@ A IA deve:
 
 ```
 ```
-````
 ## Bloco 5 — Hooks: positivos legítimos
 
 > *Aplicável apenas a Claude Code e Cursor.* Testa que o hook `UserPromptSubmit` dispara em prompts legítimos da API Tray e injeta o contexto OAuth.
@@ -751,8 +748,6 @@ A IA deve:
 
 ```
 ```
-````
-````markdown
 ## Bloco 6 — Hooks: regressão (nunca interrompe)
 
 > *Aplicável apenas a Claude Code e Cursor.* Testa que mesmo quando o hook `UserPromptSubmit` dispara, ele é APENAS informativo — nunca interrompe, bloqueia ou contamina respostas para pedidos não-Tray.
@@ -815,8 +810,6 @@ A IA deve:
 
 ```
 ```
-````
-````markdown
 ## Bloco 7 — `PostToolUse` (Write/Edit/Bash)
 
 > *Aplicável apenas a Claude Code e Cursor.* Testa os dois hooks `PostToolUse`: 7A após `Write|Edit` (segurança/qualidade do código gerado), 7B após `Bash` (diagnóstico de respostas HTTP da Tray).
@@ -1040,8 +1033,6 @@ A IA deve:
 
 ```
 ```
-````
-````markdown
 ## Bloco 8 — Smoke test ferramentas secundárias
 
 > Cobertura mínima em ferramentas onde **hooks não são suportados** e onde o plugin é entregue via arquivo de instrução (AGENTS.md / GEMINI.md / `.github/copilot-instructions.md` / regras nativas). Apenas verifica que o contexto é carregado e que a IA acerta o básico.
@@ -1157,7 +1148,6 @@ A IA deve:
 
 ```
 ```
-````
 ## Próximos passos (robustez futura)
 
 A v1 cobre o suficiente para validar as mudanças da branch `feat/skill-validation-and-disambiguation`. Para uma v2, eis cenários extras já mapeados — mantidos aqui para o time não esquecer:
