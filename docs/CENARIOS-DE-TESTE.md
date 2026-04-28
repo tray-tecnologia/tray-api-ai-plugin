@@ -1158,3 +1158,33 @@ A IA deve:
 ```
 ```
 ````
+## Próximos passos (robustez futura)
+
+A v1 cobre o suficiente para validar as mudanças da branch `feat/skill-validation-and-disambiguation`. Para uma v2, eis cenários extras já mapeados — mantidos aqui para o time não esquecer:
+
+### OAuth e auth
+
+- **Erros `1099` e `1000`–`1003`** — verificar que a IA reconhece cada estado da loja e orienta corretamente.
+- **Renovação proativa** — pedir agendamento de renovação do `access_token` com margem ≤ 2h30 antes da expiração de 3h.
+
+### Rate limit e robustez de rede
+
+- **Curva de backoff exponencial em 429** — validar `1s, 2s, 4s, 8s, ...`.
+- **Operação em lote** — importação de 1.000 produtos com `150 itens/batch + pausa de 60s entre batches`.
+- **Paginação com `pager.total > 50`** — listar todos os pedidos do mês com loop iterativo.
+
+### Regras BR
+
+- **CNPJ malformado** — análogo ao `3.2`, mas para cliente PJ.
+- **CEP malformado** — endereço com CEP não-numérico ou `< 8` dígitos.
+- **NCM com 7 dígitos** ou **EAN sem dígito verificador**.
+- **Datas em `DD/MM/YYYY`** (errado) vs `YYYY-MM-DD`.
+
+### Skills sem schema (29 restantes)
+
+Adicionar cenários para `multi-cd`, `kits compostos`, `listas-preco-b2b`, `cupons`, `notas-fiscais`, etc.
+
+### Regressão / negativa
+
+- **Recurso inexistente** — pedir algo cuja skill correta não existe e validar que a IA não inventa endpoint.
+- **Ambiguidade entre 2 skills** — `pedidos` vs `status-pedido`, `clientes` vs `enderecos-cliente`, `produtos` vs `informacoes-adicionais`.
