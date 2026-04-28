@@ -116,3 +116,190 @@ Conferir que a URL gerada bate com a skill correspondente:
 | `tray-webhooks` | listener no seu próprio servidor (Tray ativa por ticket) |
 
 `access_token` deve estar como **query parameter**, nunca em header.
+## Bloco 1 — Geração de código (positivos legítimos)
+
+> Testa que a IA seleciona as skills certas, segue a seção "Antes de responder" e executa `validate.mjs` quando aplicável.
+
+### 1.1 — Login + listar produtos
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 1 — Geração de código (positivos legítimos)
+**O que valida:** seleção combinada de `tray-autorizacao` + `tray-produtos`, fluxo OAuth completo, uso de env vars e execução do `validate.mjs` no payload de `POST /auth`.
+
+#### Prompt (copy-paste)
+
+> Crie um sistema simples que faça login na minha loja Tray usando OAuth e liste os produtos cadastrados. Mostre apenas nome, preço e estoque.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Identificar e usar as skills `tray-autorizacao` (etapa 3 do OAuth, `POST /auth`) e `tray-produtos` (`GET /products`).
+2. Não emitir `access_token`/`consumer_key`/`consumer_secret` como literais — usar env vars.
+3. Usar `?access_token={token}` como query parameter em `GET /products`.
+4. Executar `node skills/autorizacao/scripts/validate.mjs '<payload>'` no payload de troca de código por token.
+
+#### Checklist de verificação
+
+> `[x]` passou · `[!]` falhou · `[ ]` não testado · veja [Como verificar em cada ferramenta](#como-verificar-em-cada-ferramenta).
+
+- [ ] **Skills selecionadas:** apareceram `tray-autorizacao` E `tray-produtos`
+- [ ] **"Antes de responder" seguida:** os 4 passos (ou 5 com `validate.mjs`) refletidos no código
+- [ ] **Endpoints corretos:** `POST {api_address}/auth` (etapa 3) + `GET {api_address}/products?access_token=…`
+- [ ] **Sem credenciais hardcoded:** uso de `process.env.TRAY_*` ou equivalente
+- [ ] **`validate.mjs` executado:** `skills/autorizacao/scripts/validate.mjs` rodou no payload de `POST /auth`
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: contexto OAuth foi injetado
+- [ ] **Hook não interrompeu a operação:** resposta foi entregue normalmente
+
+#### Observações
+
+```
+(anote nuances por ferramenta: o que a IA fez de diferente, o que faltou, etc.)
+```
+
+---
+
+### 1.2 — Criar produto simples
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 1 — Geração de código (positivos legítimos)
+**O que valida:** uso de `tray-produtos`, payload envelopado em `{"Product": {...}}`, presença dos campos obrigatórios `name` e `price`, e `validate.mjs` aprovando.
+
+#### Prompt (copy-paste)
+
+> Cadastra um produto novo na minha loja Tray com nome 'Camiseta Básica', preço 49.90 e estoque 100.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-produtos` e o endpoint `POST {api_address}/products?access_token=…`.
+2. Envelopar o body em `{"Product": {...}}`.
+3. Incluir os campos obrigatórios `name` e `price` (e `stock` ou variação como informação extra).
+4. Rodar `node skills/produtos/scripts/validate.mjs '{"Product": {"name":"Camiseta Básica","price":"49.90"}}'` e o validador aprovar.
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-produtos`
+- [ ] **"Antes de responder" seguida:** payload tem `name` e `price`, sem credenciais literais
+- [ ] **Chave-envelope:** body envolto em `{"Product": {...}}`
+- [ ] **Endpoint correto:** `POST {api_address}/products?access_token=…`
+- [ ] **`validate.mjs` executado e aprovado:** saída `✅ Payload válido`
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: contexto OAuth foi injetado (gatilho `/products`)
+- [ ] **Hook não interrompeu:** resposta foi entregue normalmente
+
+#### Observações
+
+```
+```
+
+---
+
+### 1.3 — Listar pedidos do dia
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 1 — Geração de código (positivos legítimos)
+**O que valida:** uso de `tray-pedidos` (e `tray-autorizacao` se OAuth não estiver pronto), filtro de data no formato `YYYY-MM-DD`, paginação com `limit ≤ 50`.
+
+#### Prompt (copy-paste)
+
+> Preciso de um script que liste todos os pedidos da minha loja Tray feitos hoje, mostrando id, cliente e valor total.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-pedidos` e o endpoint `GET {api_address}/orders?access_token=…`.
+2. Aplicar filtro de data no formato `YYYY-MM-DD` (campo típico: `date`).
+3. Iterar via paginação (`limit ≤ 50` por página, usando `pager.total` para saber quando parar).
+4. Não hardcodar credenciais.
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-pedidos` (e `tray-autorizacao` se OAuth não estiver pronto)
+- [ ] **"Antes de responder" seguida:** método e endpoint corretos
+- [ ] **Filtro de data:** `YYYY-MM-DD`, não `DD/MM/YYYY`
+- [ ] **Paginação:** `limit ≤ 50`, loop com `pager.total`
+- [ ] **Endpoint correto:** `GET {api_address}/orders?access_token=…`
+- [ ] **Sem credenciais hardcoded**
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `/orders`
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 1.4 — Cadastrar cliente B2C
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 1 — Geração de código (positivos legítimos)
+**O que valida:** uso de `tray-clientes`, payload envelopado em `{"Customer": {...}}`, CPF normalizado para 11 dígitos, `validate.mjs` aprovando.
+
+#### Prompt (copy-paste)
+
+> Cria um cliente novo na minha Tray: nome 'João Silva', email 'joao@exemplo.com', CPF '529.982.247-25'.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-clientes` e o endpoint `POST {api_address}/customers?access_token=…`.
+2. Envelopar body em `{"Customer": {...}}`.
+3. Normalizar CPF para 11 dígitos puros (remover pontos e traço): `52998224725`.
+4. Rodar `node skills/clientes/scripts/validate.mjs '<payload>'` — validador aprova (campos `name` e `email` presentes).
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-clientes`
+- [ ] **"Antes de responder" seguida**
+- [ ] **Chave-envelope:** body envolto em `{"Customer": {...}}`
+- [ ] **CPF normalizado:** 11 dígitos, sem pontuação
+- [ ] **Endpoint correto:** `POST {api_address}/customers?access_token=…`
+- [ ] **`validate.mjs` executado e aprovado**
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `/customers`
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
+
+---
+
+### 1.5 — Listener de webhook de pedidos
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 1 — Geração de código (positivos legítimos)
+**O que valida:** uso de `tray-webhooks`, geração de listener HTTP, parse de payload `application/x-www-form-urlencoded`, e que a IA mencione que ativação na Tray é por ticket de suporte (não via API).
+
+#### Prompt (copy-paste)
+
+> Crie um endpoint Express que receba webhooks da Tray e processe eventos de pedidos novos (scope_name=order, act=insert). Inclua validação dos campos recebidos.
+
+#### Resultado esperado
+
+A IA deve:
+
+1. Usar `tray-webhooks` e gerar um listener Express com `app.post('/webhooks/tray', ...)`.
+2. Parsear `application/x-www-form-urlencoded` (`express.urlencoded({ extended: true })`).
+3. Processar os campos `seller_id`, `scope_id`, `scope_name`, `act` (filtrando `scope_name === 'order' && act === 'insert'`).
+4. Rodar `node skills/webhooks/scripts/validate.mjs '<payload-de-exemplo>'` — validador aprova um payload completo.
+5. Mencionar que **ativação do webhook na Tray é via ticket de suporte**, não via API.
+
+#### Checklist de verificação
+
+- [ ] **Skill selecionada:** `tray-webhooks`
+- [ ] **"Antes de responder" seguida**
+- [ ] **Listener correto:** parse de `x-www-form-urlencoded`, leitura de `seller_id`/`scope_id`/`scope_name`/`act`
+- [ ] **`validate.mjs` executado e aprovado em payload de exemplo**
+- [ ] **Menção a ativação por ticket de suporte**
+- [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `api.*tray`
+- [ ] **Hook não interrompeu**
+
+#### Observações
+
+```
+```
