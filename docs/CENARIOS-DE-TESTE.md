@@ -664,15 +664,15 @@ A IA deve:
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 5 — Hooks: positivos legítimos
-**O que valida:** o gatilho `api.*tray` dispara.
+**O que valida:** o gatilho `api.*tray` (e/ou `access_token`/`refresh_token`) dispara.
 
 #### Prompt (copy-paste)
 
-> Como faço autenticação na API Tray?
+> Como faço autenticação na API Tray? Preciso entender o fluxo de access_token e refresh_token.
 
 #### Resultado esperado
 
-1. Hook `UserPromptSubmit` **DISPARA** — match em `api.*tray`.
+1. Hook `UserPromptSubmit` **DISPARA** — match em `api.*tray`, `access_token` e `refresh_token` (qualquer um já basta — múltiplos garantem o disparo mesmo se o regex for case-sensitive).
 2. Contexto da Tray injetado: aviso "APENAS informativo" + lembretes de OAuth, expiração, rate limit, URL base.
 3. A IA responde sobre OAuth 2.0 de 3 etapas usando a skill `tray-autorizacao`.
 
@@ -756,15 +756,15 @@ A IA deve:
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 6 — Hooks: regressão
-**O que valida:** prompt com `api.*tray` que pede explicitamente algo não-Tray.
+**O que valida:** prompt com keyword da API Tray que pede explicitamente algo não-Tray. O `access_token` é deliberadamente incluído para garantir match (case-insensitive ou case-sensitive).
 
 #### Prompt (copy-paste)
 
-> Já usei a API Tray no passado, mas agora preciso aprender autenticação genérica em Express com Passport.js. Me explica do zero, sem mencionar Tray.
+> Já usei a API Tray (com access_token) no passado, mas agora preciso aprender autenticação genérica em Express com Passport.js. Me explica do zero, sem mencionar Tray.
 
 #### Resultado esperado
 
-1. Hook `UserPromptSubmit` **DISPARA** (match em `api.*tray`).
+1. Hook `UserPromptSubmit` **DISPARA** (match em `access_token` no mínimo).
 2. A IA **ignora** o contexto injetado (porque o usuário pediu explicitamente algo genérico) e responde sobre Express + Passport.js.
 3. A resposta **não** menciona OAuth da Tray, `access_token`, `consumer_key` etc.
 
@@ -877,9 +877,71 @@ A IA deve:
 
 ---
 
+#### 7.3 — URL fora do padrão `{api_address}`
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7A — Write|Edit
+**O que valida:** check (2) do hook `Write|Edit` — após gerar código que monta URL para um domínio Tray genérico (em vez do `{api_address}` específico da loja), o hook alerta.
+
+##### Prompt (copy-paste)
+
+> Cria um arquivo `tray-client.js` que faça `GET https://api.tray.com.br/products?access_token=TOKEN` e retorne os produtos. Pode usar fetch direto, sem helpers.
+
+##### Resultado esperado
+
+1. A IA usa `Write` para criar `tray-client.js` montando a URL com o domínio público `api.tray.com.br`.
+2. Após o `Write`, hook `PostToolUse` dispara e alerta:
+   - "URLs de endpoint da Tray fora do padrão `https://{api_address}/<recurso>?access_token={token}`"
+3. A IA explica que `{api_address}` é específico por loja (vem do callback OAuth) e corrige.
+
+##### Checklist de verificação
+
+- [ ] **`Write` foi executado**
+- [ ] **Hook `PostToolUse` disparou** após o `Write`
+- [ ] **Texto do alerta menciona "fora do padrão" e/ou `{api_address}`**
+- [ ] **A IA corrigiu para usar `{api_address}` parametrizado**
+
+##### Observações
+
+```
+```
+
+---
+
+#### 7.4 — Falta sugestão de `validate.mjs` em recurso com schema
+
+**Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
+**Bloco:** 7A — Write|Edit
+**O que valida:** check (4) do hook `Write|Edit` — após gerar código que monta payload para um recurso com `validate.mjs` (`produtos`/`pedidos`/`autorizacao`/`webhooks`/`clientes`), o hook sugere rodar o validador antes de testar contra a API real.
+
+##### Prompt (copy-paste)
+
+> Cria um arquivo `register-product.js` que monte o body para `POST /products` na Tray com `{"Product": {"name": "Tênis", "price": "199.90"}}` e faça a requisição. Não precisa rodar nem testar — só escrever o arquivo.
+
+##### Resultado esperado
+
+1. A IA usa `Write` para criar `register-product.js` com o body correto.
+2. Após o `Write`, hook `PostToolUse` dispara e sugere:
+   - "rodar `skills/produtos/scripts/validate.mjs` antes de testar contra a API real"
+3. A IA pega o sugerido e roda o validador (ou explica como o usuário pode rodar).
+
+##### Checklist de verificação
+
+- [ ] **`Write` foi executado**
+- [ ] **Hook `PostToolUse` disparou** após o `Write`
+- [ ] **Texto do alerta sugere `skills/produtos/scripts/validate.mjs`**
+- [ ] **A IA seguiu a sugestão (rodou o validador) ou explicou como rodá-lo**
+
+##### Observações
+
+```
+```
+
+---
+
 ### Sub-grupo 7B — `Bash`
 
-#### 7.3 — HTTP 401 (token inválido/expirado)
+#### 7.5 — HTTP 401 (token inválido/expirado)
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 7B — Bash
@@ -912,7 +974,7 @@ A IA deve:
 
 ---
 
-#### 7.4 — HTTP 429 (rate limit)
+#### 7.6 — HTTP 429 (rate limit)
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 7B — Bash
@@ -944,7 +1006,7 @@ A IA deve:
 
 ---
 
-#### 7.5 — HTTP 400 (campo obrigatório / formato inválido)
+#### 7.7 — HTTP 400 (campo obrigatório / formato inválido)
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 7B — Bash
@@ -976,7 +1038,7 @@ A IA deve:
 
 ---
 
-#### 7.6 — HTTP 404 (URL base errada / `api_address` incorreto)
+#### 7.8 — HTTP 404 (URL base errada / `api_address` incorreto)
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 7B — Bash
@@ -1007,7 +1069,7 @@ A IA deve:
 
 ---
 
-#### 7.7 — Bash sem chamada à Tray (regressão)
+#### 7.9 — Bash sem chamada à Tray (regressão)
 
 **Aplicável a:** Claude Code · Cursor *(hook não existe nas demais)*
 **Bloco:** 7B — Bash
@@ -1072,7 +1134,7 @@ A IA deve:
 **Bloco:** 8 — Smoke test
 **O que valida:** `.github/copilot-instructions.md` é consumido nas sugestões do Copilot.
 
-#### Prompt (não é prompt, é gatilho contextual)
+#### Prompt (gatilho via comentário em arquivo)
 
 > Em um arquivo TypeScript novo, escrever o comentário `// Função para autenticar na API Tray via OAuth` e aceitar a sugestão automática do Copilot.
 
@@ -1127,7 +1189,7 @@ A IA deve:
 
 **Aplicável a:** Windsurf (Cascade)
 **Bloco:** 8 — Smoke test
-**O que valida:** rule do Cascade é detectado.
+**O que valida:** rule do Cascade é detectado. No projeto, o Cascade lê o `AGENTS.md` da raiz como rule always-on (ver `README.md`, seção *Windsurf (Cascade)*).
 
 #### Prompt (copy-paste)
 
@@ -1135,12 +1197,13 @@ A IA deve:
 
 #### Resultado esperado
 
-1. Windsurf detecta a rule do Cascade e carrega o contexto.
+1. Windsurf detecta o `AGENTS.md` (raiz do repositório) como rule always-on do Cascade.
 2. Resposta menciona OAuth de 3 etapas e os mesmos elementos do 8.1.
 
 #### Checklist de verificação
 
-- [ ] **A rule foi detectada:** verificar painel Cascade
+- [ ] **`AGENTS.md` está na raiz do repositório de teste**
+- [ ] **A rule foi detectada:** verificar painel Cascade ("Rules" / "Active rules")
 - [ ] **Resposta menciona OAuth de 3 etapas**
 - [ ] **Resposta menciona `consumer_key`, `consumer_secret`, `code`**
 
