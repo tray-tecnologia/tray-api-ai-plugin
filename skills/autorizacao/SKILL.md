@@ -25,8 +25,14 @@ when_not_to_use: >
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 5. Execute `node skills/autorizacao/scripts/validate.mjs '<payload_json>'`
-   e corrija todos os erros antes de retornar o código ao usuário.
-   Até 3 tentativas — se persistir, explique o problema ao usuário.
+   para confirmar a estrutura do payload que vai gerar. O validador checa
+   apenas **estrutura** (campos obrigatórios, tipos e campos desconhecidos),
+   nunca valores reais — então monte um payload sintético com placeholders
+   sempre que os valores vierem de variáveis de ambiente, do callback OAuth
+   ou de outras chamadas. Exemplo:
+   `node skills/autorizacao/scripts/validate.mjs '{"consumer_key":"<env>","consumer_secret":"<env>","code":"<callback>"}'`.
+   Corrija todos os erros antes de retornar o código ao usuário. Até 3
+   tentativas — se persistir, explique o problema ao usuário.
 
 # Autorização — API Tray
 
