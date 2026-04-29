@@ -31,6 +31,8 @@
 - `README.md` agora referencia `SECURITY.md` e `CONTRIBUTING.md` na introdução, e descreve fluxo de instalação via `npm`/`pnpm`/`bun` e instruções por ferramenta usando `node_modules`
 - `package.json` com scripts `version:check` e `version:set`
 - `docs/CENARIOS-DE-TESTE.md` — sub-grupo 7B reescrito: cenários 7.5–7.8 agora validam o comportamento **migrado** (orientação HTTP via `UserPromptSubmit` proativo); 7.9 vira regressão crítica de "Bash trivial não dispara mais nada"; novo cenário 7.10 cobre prompts off-topic dentro do plugin
+- Passo 5 da seção "Antes de responder" reescrito nas 5 skills com schema (`autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`) deixando explícito que o validador checa apenas **estrutura** (campos obrigatórios, tipos, campos desconhecidos) — não valores reais — e que payloads sintéticos com placeholders são esperados quando os valores virão de variáveis de ambiente, callback OAuth, entrada do usuário ou outras chamadas. Cada skill ganhou um exemplo concreto reaproveitando os campos do schema. Motivação: na execução manual do cenário 1.1 (`docs/CENARIOS-DE-TESTE.md`), a IA pulou o passo 5 raciocinando *"o payload só tem campos vindos de env vars — não há JSON concreto pra passar ao validador"*, leitura razoável mas incorreta da redação anterior. A nova redação remove essa fricção sem mudar comportamento do validador
+- `scripts/lib/validate-schema.mjs` — quando `validate.mjs` é chamado sem payload, a mensagem de uso passou a incluir uma dica explícita de que o validador aceita placeholders nos valores. Reforça a mensagem das skills para quem invocar o validador interativamente
 
 ---
 

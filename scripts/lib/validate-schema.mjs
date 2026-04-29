@@ -177,6 +177,9 @@ export async function runValidator({ callerUrl, skillName, usageExample }) {
   if (!raw) {
     console.error(`❌ Nenhum payload fornecido para skill "${skillName}".`);
     console.error(`   Uso: node validate.mjs '${usageExample}'`);
+    console.error(
+      `   Dica: este validador checa apenas a estrutura (campos obrigatórios, tipos, campos desconhecidos). Pode-se passar placeholders nos valores — só os nomes e tipos importam.`,
+    );
     process.exit(1);
   }
 
