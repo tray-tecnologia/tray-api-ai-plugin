@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Plugins oficiais da Tray E-commerce para Claude Code",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "tray-api",
       "source": "./",
       "description": "Plugin completo para integração com as APIs da Tray E-commerce. 35 skills, 10 agentes, 3 comandos cobrindo 150+ endpoints.",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "author": {
         "name": "Rodolfo Moraes",
         "email": "rmoraes@tray.net.br"
@@ -22,8 +22,19 @@
       "homepage": "https://developers.tray.com.br",
       "repository": "https://github.com/tray-tecnologia/tray-api-claude-plugin",
       "license": "GPL-3.0",
-      "keywords": ["tray", "e-commerce", "api", "integration", "oauth", "webhook"],
-      "tags": ["e-commerce", "api-integration", "developer-tools"]
+      "keywords": [
+        "tray",
+        "e-commerce",
+        "api",
+        "integration",
+        "oauth",
+        "webhook"
+      ],
+      "tags": [
+        "e-commerce",
+        "api-integration",
+        "developer-tools"
+      ]
     }
   ]
 }

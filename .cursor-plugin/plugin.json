@@ -2,7 +2,7 @@
   "name": "tray-api",
   "displayName": "Tray API",
   "description": "Plugin de documentação da API Tray com skills, agentes e comandos para integração.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "Rodolfo Moraes",
     "email": "rmoraes@tray.net.br"

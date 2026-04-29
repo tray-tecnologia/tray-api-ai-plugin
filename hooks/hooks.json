@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Analise o código que acabou de ser escrito e verifique APENAS se houver problemas relacionados à API Tray. Se nada do abaixo for aplicável, NÃO responda. Checks: (1) access_token, consumer_key, consumer_secret ou refresh_token aparecendo como literais hardcoded — alerte para usar variáveis de ambiente. (2) URLs de endpoint da Tray fora do padrão https://{api_address}/<recurso>?access_token={token}. (3) Em chamadas POST ou PUT para /products, /orders, /customers, /variants ou outros recursos Tray, o body JSON deve estar envolto na chave do recurso (ex.: {\"Product\": {...}}, {\"Order\": {...}}, {\"Customer\": {...}}) — se faltar, alerte o desenvolvedor. (4) Se o código gerar payload para um recurso que tem skills/<recurso>/scripts/validate.mjs, sugira rodar o validador antes de testar contra a API real. Responda apenas se encontrar algum problema."
+            "prompt": "Analise o código que acabou de ser escrito e verifique APENAS se houver problemas relacionados à API Tray. REGRA-MESTRA: se nenhum dos checks abaixo se aplicar, NÃO responda nada — qualquer texto interrompe o fluxo do agente. PULE COMPLETAMENTE (não responda) se o arquivo escrito for de template ou documentação: .env.example, .env.template, .env.sample, *.example, *.template, *.sample, *.dist, *.md, *.mdc, *.txt, *.rst, *.json (configs), *.yml, *.yaml, *.toml, LICENSE, .gitignore — esses arquivos são templates/docs e a menção de variáveis Tray neles é boa prática de segurança. Para arquivos de código, aplique: (1) Credencial REAL hardcoded — string atribuída a access_token, consumer_key, consumer_secret ou refresh_token que aparente ser valor real (≥20 caracteres alfanuméricos/hex/base64 sem espaços). Ignore placeholders óbvios (sua_*_aqui, seu_*_aqui, your_*_here, <...>, {{...}}, xxx, TODO, CHANGE_ME, ***, strings vazias) e exemplos dentro de docstrings/comentários. O gatilho é o VALOR, nunca o NOME da variável. (2) URLs de endpoint Tray fora do padrão https://{api_address}/<recurso>?access_token={token} em código de produção. (3) Em chamadas POST ou PUT para /products, /orders, /customers, /variants ou outros recursos Tray, o body JSON deve estar envolto na chave do recurso (ex.: {\"Product\": {...}}, {\"Order\": {...}}, {\"Customer\": {...}}) — se faltar, alerte. (4) Se o código gerar payload para um recurso que tem skills/<recurso>/scripts/validate.mjs, sugira rodar o validador antes de testar contra a API real. Quando responder, seja conciso (1–3 linhas) e foque só no problema encontrado — sem disclaimers genéricos sobre segurança."
           }
         ]
       },
@@ -22,7 +22,7 @@
     ],
     "UserPromptSubmit": [
       {
-        "matcher": "api.*tray|tray.*api|api_address|access_token|consumer_key|consumer_secret|refresh_token|developers\\.tray|\\/products|\\/orders|\\/customers|\\/auth",
+        "matcher": "[Aa][Pp][Ii][\\s.-]+[Tt][Rr][Aa][Yy]\\b|\\b[Tt][Rr][Aa][Yy][\\s.-]+[Aa][Pp][Ii]\\b|\\bloja\\s+[Tt]ray\\b|\\bplataforma\\s+[Tt]ray\\b|\\b[Tt]ray\\s+[Tt]ecnologia\\b|\\bwebhook[s]?\\s+(?:da\\s+)?[Tt]ray\\b|\\bcliente[s]?\\s+(?:da\\s+|na\\s+)[Tt]ray\\b|\\bproduto[s]?\\s+(?:da\\s+|na\\s+)[Tt]ray\\b|\\bpedido[s]?\\s+(?:da\\s+|na\\s+)[Tt]ray\\b|\\b(?:na|da|de|com|minha)\\s+(?:minha\\s+|sua\\s+|loja\\s+)?[Tt]ray\\b|api_address|access_token|consumer_key|consumer_secret|refresh_token|developers\\.tray|\\/products|\\/orders|\\/customers|\\/auth|scope_name|scope_id|seller_id",
         "hooks": [
           {
             "type": "prompt",

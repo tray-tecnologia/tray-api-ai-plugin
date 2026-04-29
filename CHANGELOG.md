@@ -1,10 +1,13 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0] - 2026-04-29
 
 ### Adicionado
 
 - `skills/visao-geral/SKILL.md` — skill de entrada com regras invariantes da API Tray (OAuth, payload com chave do recurso, rate limit, dados BR), carregada antes da skill do recurso para reforçar guardrails em todas as plataformas suportadas
+- Seção `## Antes de responder` em todos os 35 `SKILL.md`, com 4 ou 5 passos de verificação (método/endpoint, campos obrigatórios, sem credenciais literais, skill correta e — quando aplicável — execução de `validate.mjs`)
+- `skills/{autorizacao,produtos,pedidos,clientes,webhooks}/scripts/validate.mjs` — validadores executáveis de payload por schema, com até 3 tentativas de correção antes de devolver código ao usuário
+- `scripts/test-prompt-matcher.mjs` — regressão do `matcher` do hook `UserPromptSubmit` contra os prompts dos Blocos 1, 4, 5 e 6 do `docs/CENARIOS-DE-TESTE.md`, garantindo cobertura PT-BR e ausência de falso-positivo
 - `.github/workflows/ci.yml` — pipeline de CI no GitHub Actions rodando `npm run smoke` e `npm run version:check` em PRs e push para `main` (matriz Node 20 e 22)
 - `SECURITY.md` — política de divulgação responsável de vulnerabilidades, com canais privados (GitHub Private Vulnerability Reporting + e-mail), SLA de primeiro contato e escopo cobrindo hooks, scripts executáveis, manifests e conteúdo de prompt
 - `CONTRIBUTING.md` — guia de contribuição com fluxo de PR, regras de versão, validação local (smoke + version:check) e Conventional Commits
@@ -16,15 +19,12 @@
 
 ### Alterado
 
+- `hooks/hooks.json` — `matcher` do `UserPromptSubmit` reescrito para cobrir vocabulário PT-BR realista. O matcher antigo (`api.*tray|tray.*api|access_token|...`) só disparava com termos técnicos em inglês e não casava com prompts naturais como *"liste os produtos da minha loja Tray"*. O novo matcher usa classes de caracteres (`[Tt]ray`, `[Aa][Pp][Ii]`) e word boundaries para casar com **"loja Tray"**, **"API Tray"**, **"webhooks da Tray"**, **"produtos/pedidos/clientes da/na Tray"**, **"da minha Tray"**, etc., sem disparar em falsos positivos como **"bandeja (tray) de comida"** ou **"lib de UI chamada Tray"**. Validado contra os 18 cenários relevantes em `docs/CENARIOS-DE-TESTE.md` via `scripts/test-prompt-matcher.mjs`
+- `hooks/hooks.json` — prompt do `PostToolUse` (matcher `Write|Edit`) reforçado para evitar falso-positivo em arquivos de template e documentação. Agora o hook ignora explicitamente `.env.example`, `.env.template`, `*.example`, `*.template`, `*.sample`, `*.md`, `*.yml`, `*.json` (configs) e similares; em arquivos de código, o gatilho do check de credencial hardcoded passou a ser o **valor** da string (≥20 caracteres alfanuméricos sem espaços), nunca o **nome** da variável, ignorando placeholders óbvios (`sua_*_aqui`, `<...>`, `{{...}}`, `xxx`, `CHANGE_ME`). Resolve o caso reportado em testes externos do plugin onde criar `.env.example` com placeholders disparava `PostToolUse:Write hook stopped continuation`
+- `scripts/smoke-test.js` — adicionada seção 10 que executa `test-prompt-matcher.mjs` como regressão de CI; valida também os novos manifests de distribuição
 - Contagem de skills atualizada para **35** em `README.md`, `AGENTS.md`, `.github/copilot-instructions.md` e `.claude-plugin/marketplace.json`
 - `GEMINI.md`, `.aiassistant/rules/tray-api.md` e `.cursor/rules/tray-api.mdc` listam a nova skill `visao-geral` como entrypoint, carregada antes das skills de recurso
-- `README.md` agora referencia `SECURITY.md` e `CONTRIBUTING.md` na introdução
-
-### Alterado
-
-- `.claude-plugin/plugin.json` e `.claude-plugin/marketplace.json` alinhados para versão `1.1.0`
-- `README.md` com fluxo de instalação via `npm`/`pnpm`/`bun` e instruções por ferramenta usando `node_modules`
-- `scripts/smoke-test.js` para validar também os novos manifests de distribuição
+- `README.md` agora referencia `SECURITY.md` e `CONTRIBUTING.md` na introdução, e descreve fluxo de instalação via `npm`/`pnpm`/`bun` e instruções por ferramenta usando `node_modules`
 - `package.json` com scripts `version:check` e `version:set`
 
 ---
