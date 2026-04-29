@@ -1,7 +1,7 @@
 # Tray API Plugin
 
 Documentação ativa da API da Tray para assistentes de IA. Este repositório contém
-34 skills com a documentação completa de cada recurso da plataforma Tray, fluxos
+35 skills com a documentação completa de cada recurso da plataforma Tray, fluxos
 de agentes especializados e comandos de atalho.
 
 Documentação oficial da API: https://developers.tray.com.br
@@ -45,6 +45,12 @@ Documentação oficial da API: https://developers.tray.com.br
 
 Leia o `SKILL.md` do recurso antes de gerar código. Cada skill contém endpoints,
 campos, exemplos e erros comuns.
+
+### Entrada (carregar antes da skill do recurso)
+
+| Skill | Arquivo | Quando usar |
+|-------|---------|-------------|
+| Visão geral | `skills/visao-geral/SKILL.md` | Sempre, ao iniciar qualquer trabalho com a API Tray. Reforça regras invariantes (OAuth, payload com chave do recurso, rate limit, dados BR) e direciona para a skill específica |
 
 ### Autenticação e infraestrutura
 

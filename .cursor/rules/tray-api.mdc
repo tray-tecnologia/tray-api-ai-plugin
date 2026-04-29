@@ -20,6 +20,12 @@ alwaysApply: false
 - Paginação máxima: 50 itens por requisição.
 - Nunca escrever `access_token`, `consumer_key` ou `consumer_secret` como literais.
 
+## Skill de entrada (carregar antes da skill do recurso)
+
+| Recurso | Arquivo para @-mencionar |
+|---------|--------------------------|
+| Visão geral da API Tray | `skills/visao-geral/SKILL.md` |
+
 ## Documentação por recurso
 
 Para obter a documentação detalhada de um recurso, @-mencione o SKILL.md

@@ -19,6 +19,12 @@ Documentação oficial: https://developers.tray.com.br
 
 ---
 
+## Skill de entrada (carregar primeiro)
+
+@./skills/visao-geral/SKILL.md
+
+---
+
 ## Skills carregados (autenticação e pedidos — núcleo)
 
 @./skills/autorizacao/SKILL.md

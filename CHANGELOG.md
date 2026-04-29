@@ -4,11 +4,21 @@
 
 ### Adicionado
 
+- `skills/visao-geral/SKILL.md` — skill de entrada com regras invariantes da API Tray (OAuth, payload com chave do recurso, rate limit, dados BR), carregada antes da skill do recurso para reforçar guardrails em todas as plataformas suportadas
+- `.github/workflows/ci.yml` — pipeline de CI no GitHub Actions rodando `npm run smoke` e `npm run version:check` em PRs e push para `main` (matriz Node 20 e 22)
+- `SECURITY.md` — política de divulgação responsável de vulnerabilidades, com canais privados (GitHub Private Vulnerability Reporting + e-mail), SLA de primeiro contato e escopo cobrindo hooks, scripts executáveis, manifests e conteúdo de prompt
+- `CONTRIBUTING.md` — guia de contribuição com fluxo de PR, regras de versão, validação local (smoke + version:check) e Conventional Commits
 - `package.json` na raiz para distribuição como pacote Node instalável
 - `.cursor-plugin/plugin.json` para manifesto nativo de distribuição no Cursor
 - `.codex-plugin/plugin.json` para manifesto nativo de distribuição no Codex
 - `gemini-extension.json` para extensão nativa no Gemini CLI
 - `scripts/sync-version.js` para sincronizar e validar versão entre todos os manifests
+
+### Alterado
+
+- Contagem de skills atualizada para **35** em `README.md`, `AGENTS.md`, `.github/copilot-instructions.md` e `.claude-plugin/marketplace.json`
+- `GEMINI.md`, `.aiassistant/rules/tray-api.md` e `.cursor/rules/tray-api.mdc` listam a nova skill `visao-geral` como entrypoint, carregada antes das skills de recurso
+- `README.md` agora referencia `SECURITY.md` e `CONTRIBUTING.md` na introdução
 
 ### Alterado
 
