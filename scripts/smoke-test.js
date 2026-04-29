@@ -325,6 +325,62 @@ try {
   fail(`Verificação de matcher — erro: ${e.message}`);
 }
 
+// ─── 11. Contrato {ok, reason} em hooks do tipo "prompt" ──────────────────────
+//
+// Schema oficial documentado em:
+//   - https://code.claude.com/docs/en/hooks#prompt-based-hooks
+//   - https://cursor.com/docs/hooks.md (Prompt-Based Hooks)
+//
+// Toda LLM invocada via type:"prompt" DEVE retornar JSON {"ok": true|false, "reason": "..."}.
+// Prompts que instruem "não responda" violam o contrato e disparam
+// `hook stopped continuation` quando a LLM tenta cumprir gerando prosa.
+// Hooks puramente informativos (que injetam contexto sem decidir) são exceção
+// e devem declarar explicitamente que NÃO bloqueiam o fluxo.
+
+section('11. Contrato {ok, reason} em hooks tipo "prompt"');
+
+try {
+  const hooksData = JSON.parse(readFileSync(join(ROOT, 'hooks', 'hooks.json'), 'utf-8'));
+  const promptHooks = [];
+  for (const [event, groups] of Object.entries(hooksData.hooks ?? {})) {
+    for (const group of groups) {
+      for (const handler of group.hooks ?? []) {
+        if (handler.type === 'prompt') {
+          promptHooks.push({ event, matcher: group.matcher ?? '*', prompt: handler.prompt ?? '' });
+        }
+      }
+    }
+  }
+
+  if (promptHooks.length === 0) {
+    ok('Nenhum hook do tipo "prompt" no plugin');
+  } else {
+    for (const { event, matcher, prompt } of promptHooks) {
+      const isInformative =
+        /informativ/i.test(prompt) &&
+        /(n[ãa]o|nunca|jamais).{0,40}(interromp|bloque|recus)/i.test(prompt);
+      const declaresOkSchema = /"ok"\s*:/.test(prompt);
+      const instructsSilence = /n[ãa]o.{0,20}responda/i.test(prompt);
+
+      if (isInformative && !instructsSilence) {
+        ok(`${event}/${matcher} — hook informativo (não decide, não bloqueia)`);
+      } else if (declaresOkSchema && !instructsSilence) {
+        ok(`${event}/${matcher} — declara contrato {ok, reason}`);
+      } else if (instructsSilence) {
+        fail(
+          `${event}/${matcher} — prompt instrui "não responda" mas o schema oficial exige sempre retornar {"ok": true|false, "reason": "..."}. Isso causa 'hook stopped continuation'.`
+        );
+      } else {
+        fail(
+          `${event}/${matcher} — não declara o contrato {"ok": ..., "reason": ...} nem se identifica como informativo. Risco de 'hook stopped continuation'.`
+        );
+      }
+    }
+  }
+} catch (e) {
+  fail(`Verificação de contrato {ok, reason} — erro: ${e.message}`);
+}
+
 // ─── Resultado final ───────────────────────────────────────────────────────────
 
 console.log('\n' + '─'.repeat(50));
