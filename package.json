@@ -44,7 +44,7 @@
   ],
   "scripts": {
     "smoke": "node scripts/smoke-test.js",
-    "test": "node --test \"tests/validate/**/*.test.mjs\"",
+    "test": "node --test \"tests/**/*.test.mjs\"",
     "version:check": "node scripts/sync-version.js --check",
     "version:set": "node scripts/sync-version.js --set"
   },
