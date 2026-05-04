@@ -6,6 +6,7 @@ import {
   search,
   expandSynonyms
 } from '../../scripts/lib/search-index.mjs';
+import { TOPICS_MAP } from '../../scripts/lib/topics-map.mjs';
 
 const SAMPLE_DOCS = [
   { h1: 'Autorização', title: 'Gerar Chaves', level: 'h2', body: 'Use OAuth 2.0 para autenticar', code: [{ lang: 'shell', content: 'curl -X POST /auth' }], anchor: 'gerar-chaves' },
@@ -109,4 +110,14 @@ test('search: returns took/totalResults', () => {
   assert.equal(typeof r.took, 'number');
   assert.equal(typeof r.totalResults, 'number');
   assert.ok(Array.isArray(r.expandedQuery));
+});
+
+test('search: results.topic é derivado do h1 via topics-map', () => {
+  const idx = buildIndex(SAMPLE_DOCS);
+  const r = search(idx, 'produto', { synonyms: SYNONYMS, limit: 5, topicsMap: TOPICS_MAP });
+  for (const item of r.results) {
+    if (item.h1 === 'API de Produtos') {
+      assert.equal(item.topic, 'produtos');
+    }
+  }
 });

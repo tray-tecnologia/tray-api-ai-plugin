@@ -96,7 +96,7 @@ function idf(N, df) {
   return Math.log(1 + (N - df + 0.5) / (df + 0.5));
 }
 
-export function search(index, queryRaw, { synonyms = null, topicH1 = null, limit = 5 } = {}) {
+export function search(index, queryRaw, { synonyms = null, topicH1 = null, limit = 5, topicsMap = null } = {}) {
   const t0 = Date.now();
   const empty = { query: queryRaw, expandedQuery: [], results: [], totalResults: 0, took: 0 };
   if (!queryRaw || typeof queryRaw !== 'string' || !queryRaw.trim()) {
@@ -126,16 +126,24 @@ export function search(index, queryRaw, { synonyms = null, topicH1 = null, limit
     if (score > 0) scored.push({ doc: d, score });
   }
   scored.sort((a, b) => b.score - a.score);
-  const top = scored.slice(0, limit).map(({ doc, score }) => ({
-    title: doc.title,
-    url: `https://developers.tray.com.br/#${doc.anchor}`,
-    snippet: (doc.body || '').slice(0, 200),
-    score: Math.round(score * 100) / 100,
-    topic: null,
-    h1: doc.h1,
-    level: doc.level,
-    anchor: doc.anchor
-  }));
+  const top = scored.slice(0, limit).map(({ doc, score }) => {
+    let topic = null;
+    if (topicsMap) {
+      for (const [slug, h1Name] of Object.entries(topicsMap)) {
+        if (h1Name === doc.h1) { topic = slug; break; }
+      }
+    }
+    return {
+      title: doc.title,
+      url: `https://developers.tray.com.br/#${doc.anchor}`,
+      snippet: (doc.body || '').slice(0, 200),
+      score: Math.round(score * 100) / 100,
+      topic,
+      h1: doc.h1,
+      level: doc.level,
+      anchor: doc.anchor
+    };
+  });
   return {
     query: queryRaw,
     expandedQuery: expanded,
