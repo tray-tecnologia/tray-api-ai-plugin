@@ -25,6 +25,13 @@ Documentação oficial: https://developers.tray.com.br
 - Paginação máxima: 50 itens. Rate limit: 180 req/min, 10.000/dia.
 - Datas: `YYYY-MM-DD`; timestamps: `YYYY-MM-DD HH:MM:SS`.
 
+### Bloco MANDATORY e lint de skills
+
+- Toda skill nova **deve** ter `## MANDATORY: Tool Call(s) Required Before Answering` **imediatamente** após o frontmatter.
+- O bloco **deve** incluir chamada **OBRIGATÓRIA(S)** a `node skills/tray-dev/scripts/search_docs.mjs` (sempre).
+- Skills com schema local (categoria A: `autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`) **devem** incluir também chamada **OBRIGATÓRIA(S)** a `node skills/<recurso>/scripts/validate.mjs`.
+- Validar com `npm run lint:skills`. O CI roda `npm run lint:skills` antes do smoke.
+
 ### Validação local
 
 - 8 skills têm `scripts/validate.mjs`: `autorizacao`, `produtos`, `pedidos`,
