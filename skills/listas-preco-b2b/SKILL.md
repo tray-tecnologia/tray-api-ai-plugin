@@ -8,7 +8,19 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: lista de preço B2B, tabela de preço, preço atacado,
   price_list, GET /price_lists, POST /price_lists, preço diferenciado, cliente B2B,
   preço por perfil ou preço para revendedor.
+when_not_to_use: >
+  Não use para cupons de desconto por código (use tray-cupons). Use para preços
+  diferenciados permanentes por grupo ou segmento de cliente.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Lista de Preço B2B — Tray
 

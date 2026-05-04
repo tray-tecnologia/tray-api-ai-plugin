@@ -13,6 +13,7 @@
  */
 
 import { readFileSync, readdirSync, statSync } from 'fs';
+import { spawnSync } from 'child_process';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -218,6 +219,166 @@ try {
   }
 } catch (e) {
   fail(`Verificação de agentes — erro: ${e.message}`);
+}
+
+// ─── 6. validate.mjs — payload válido ─────────────────────────────────────────
+
+section('6. validate.mjs com payload válido');
+
+const validPayloads = [
+  { skill: 'produtos',    payload: '{"name":"Produto Teste","price":"99.90"}' },
+  { skill: 'pedidos',     payload: '{"client_id":1,"products":[]}' },
+  { skill: 'autorizacao', payload: '{"consumer_key":"abc","consumer_secret":"xyz","code":"123"}' },
+  { skill: 'webhooks',    payload: '{"seller_id":100,"scope_id":200,"scope_name":"order","act":"insert"}' },
+  { skill: 'clientes',    payload: '{"name":"João Silva","email":"joao@exemplo.com"}' },
+];
+
+for (const { skill, payload } of validPayloads) {
+  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
+  if (result.status === 0) {
+    ok(`skills/${skill}/scripts/validate.mjs — payload válido aceito`);
+  } else {
+    fail(`skills/${skill}/scripts/validate.mjs — falhou com payload válido: ${result.stderr?.trim()}`);
+  }
+}
+
+// ─── 7. validate.mjs — payload inválido ───────────────────────────────────────
+
+section('7. validate.mjs com payload inválido (deve rejeitar)');
+
+const invalidPayloads = [
+  { skill: 'produtos',    payload: '{"price":"99.90"}',              expect: 'name ausente' },
+  { skill: 'pedidos',     payload: '{"products":[]}',                expect: 'client_id ausente' },
+  { skill: 'autorizacao', payload: '{"consumer_key":"abc"}',         expect: 'consumer_secret e code ausentes' },
+  { skill: 'webhooks',    payload: '{"seller_id":100}',              expect: 'scope_id/scope_name/act ausentes' },
+  { skill: 'clientes',    payload: '{"cpf":"12345678901"}',          expect: 'name e email ausentes' },
+];
+
+for (const { skill, payload, expect } of invalidPayloads) {
+  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
+  if (result.status === 1) {
+    ok(`skills/${skill}/scripts/validate.mjs — rejeitou payload inválido (${expect})`);
+  } else {
+    fail(`skills/${skill}/scripts/validate.mjs — deveria rejeitar (${expect}) mas retornou exit ${result.status}`);
+  }
+}
+
+// ─── 8. Seção "Antes de responder" em todos os SKILL.md ───────────────────────
+
+section('8. Seção "## Antes de responder" em todos os SKILL.md');
+
+let totalSection = 0;
+let missingSection = 0;
+walkDir(join(ROOT, 'skills'), 'SKILL.md', (fullPath) => {
+  const rel = fullPath.replace(ROOT + '/', '');
+  totalSection++;
+  try {
+    const content = readFileSync(fullPath, 'utf-8');
+    if (!content.includes('## Antes de responder')) {
+      fail(`${rel} — seção "## Antes de responder" ausente`);
+      missingSection++;
+    }
+  } catch (e) {
+    fail(`${rel} — não foi possível ler: ${e.message}`);
+  }
+});
+if (missingSection === 0) ok(`${totalSection} SKILL.md contêm a seção "## Antes de responder"`);
+
+// ─── 9. Campo when_not_to_use em todos os SKILL.md ────────────────────────────
+
+section('9. Campo "when_not_to_use" no frontmatter de todos os SKILL.md');
+
+let totalField = 0;
+let missingField = 0;
+walkDir(join(ROOT, 'skills'), 'SKILL.md', (fullPath) => {
+  const rel = fullPath.replace(ROOT + '/', '');
+  totalField++;
+  try {
+    const content = readFileSync(fullPath, 'utf-8');
+    if (!content.includes('when_not_to_use:')) {
+      fail(`${rel} — campo "when_not_to_use" ausente no frontmatter`);
+      missingField++;
+    }
+  } catch (e) {
+    fail(`${rel} — não foi possível ler: ${e.message}`);
+  }
+});
+if (missingField === 0) ok(`${totalField} SKILL.md contêm o campo "when_not_to_use"`);
+
+// ─── 10. Matcher do hook UserPromptSubmit cobre prompts PT-BR ─────────────────
+
+section('10. Matcher do hook UserPromptSubmit (cobertura PT-BR)');
+
+try {
+  const result = spawnSync('node', [join(ROOT, 'scripts', 'test-prompt-matcher.mjs')], {
+    encoding: 'utf-8',
+  });
+  if (result.status === 0) {
+    ok('matcher de UserPromptSubmit casa todos os prompts esperados (Bloco 1, 5, 6) e ignora Bloco 4');
+  } else {
+    fail(`matcher de UserPromptSubmit falhou — rode 'node scripts/test-prompt-matcher.mjs' para detalhes`);
+    if (result.stdout) console.error(result.stdout.split('\n').filter(l => l.includes('❌')).map(l => '    ' + l).join('\n'));
+  }
+} catch (e) {
+  fail(`Verificação de matcher — erro: ${e.message}`);
+}
+
+// ─── 11. Contrato {ok, reason} em hooks do tipo "prompt" ──────────────────────
+//
+// Schema oficial documentado em:
+//   - https://code.claude.com/docs/en/hooks#prompt-based-hooks
+//   - https://cursor.com/docs/hooks.md (Prompt-Based Hooks)
+//
+// Toda LLM invocada via type:"prompt" DEVE retornar JSON {"ok": true|false, "reason": "..."}.
+// Prompts que instruem "não responda" violam o contrato e disparam
+// `hook stopped continuation` quando a LLM tenta cumprir gerando prosa.
+// Hooks puramente informativos (que injetam contexto sem decidir) são exceção
+// e devem declarar explicitamente que NÃO bloqueiam o fluxo.
+
+section('11. Contrato {ok, reason} em hooks tipo "prompt"');
+
+try {
+  const hooksData = JSON.parse(readFileSync(join(ROOT, 'hooks', 'hooks.json'), 'utf-8'));
+  const promptHooks = [];
+  for (const [event, groups] of Object.entries(hooksData.hooks ?? {})) {
+    for (const group of groups) {
+      for (const handler of group.hooks ?? []) {
+        if (handler.type === 'prompt') {
+          promptHooks.push({ event, matcher: group.matcher ?? '*', prompt: handler.prompt ?? '' });
+        }
+      }
+    }
+  }
+
+  if (promptHooks.length === 0) {
+    ok('Nenhum hook do tipo "prompt" no plugin');
+  } else {
+    for (const { event, matcher, prompt } of promptHooks) {
+      const isInformative =
+        /informativ/i.test(prompt) &&
+        /(n[ãa]o|nunca|jamais).{0,40}(interromp|bloque|recus)/i.test(prompt);
+      const declaresOkSchema = /"ok"\s*:/.test(prompt);
+      const instructsSilence = /n[ãa]o.{0,20}responda/i.test(prompt);
+
+      if (isInformative && !instructsSilence) {
+        ok(`${event}/${matcher} — hook informativo (não decide, não bloqueia)`);
+      } else if (declaresOkSchema && !instructsSilence) {
+        ok(`${event}/${matcher} — declara contrato {ok, reason}`);
+      } else if (instructsSilence) {
+        fail(
+          `${event}/${matcher} — prompt instrui "não responda" mas o schema oficial exige sempre retornar {"ok": true|false, "reason": "..."}. Isso causa 'hook stopped continuation'.`
+        );
+      } else {
+        fail(
+          `${event}/${matcher} — não declara o contrato {"ok": ..., "reason": ...} nem se identifica como informativo. Risco de 'hook stopped continuation'.`
+        );
+      }
+    }
+  }
+} catch (e) {
+  fail(`Verificação de contrato {ok, reason} — erro: ${e.message}`);
 }
 
 // ─── Resultado final ───────────────────────────────────────────────────────────

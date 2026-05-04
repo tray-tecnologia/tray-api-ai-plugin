@@ -6,6 +6,8 @@
 
 Plugin completo para integração com as APIs da Tray. Acelera o desenvolvimento de aplicativos e-commerce por parceiros e comunidade na plataforma Tray, fornecendo documentação detalhada de **150+ endpoints**, fluxos de autenticação OAuth, webhooks e boas práticas de integração.
 
+Plugin licenciado sob GPL-3.0. Antes de abrir issue de segurança, leia [`SECURITY.md`](SECURITY.md). Para contribuir, leia [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 Funciona nativamente com **Claude Code**, **Cursor**, **OpenAI Codex**, **Google Gemini CLI**, **GitHub Copilot**, **JetBrains AI Assistant** e **Windsurf**.
 
 ## Pré-requisitos
@@ -103,12 +105,15 @@ O `AGENTS.md` na raiz é reconhecido automaticamente pelo Cascade como regra alw
 
 | Componente | Quantidade | Descrição |
 |:--|:--|:--|
-| Skills | 34 | Documentação completa de cada recurso da API Tray |
+| Skills | 35 | 1 skill de entrada (regras invariantes da API) + 34 skills com a documentação de cada recurso |
 | Agentes | 10 | Fluxos especializados (setup, catálogo, pedidos, debug, migração + 5 especialistas por plataforma) |
 | Comandos | 3 | Atalhos rápidos (setup, referência, validação) |
 | Hooks | 2 | Validação automática de segurança |
 
 ## Skills Disponíveis
+
+### Entrada (carregar primeiro)
+`visao-geral` — regras invariantes da API Tray (OAuth, payload com chave do recurso, rate limit, dados BR)
 
 ### Base
 `autorizacao`, `webhooks`, `produtos`, `variacoes`, `imagens-produtos`, `categorias`, `pedidos`, `clientes`, `informacoes-loja`
@@ -164,7 +169,7 @@ Ativados automaticamente pelo `assistente-migracao`. Consulte [agents/AGENTES.md
 
 # 3. Ative o plugin
 ❯ /reload-plugins
-  ⎿  Reloaded: 1 plugins · 34 skills · 5 agents · 2 hooks · 1 plugin MCP server · 0 plugin LSP servers
+  ⎿  Reloaded: 1 plugins · 35 skills · 5 agents · 2 hooks · 1 plugin MCP server · 0 plugin LSP servers
 ```
 
 ```bash
@@ -172,6 +177,9 @@ Ativados automaticamente pelo `assistente-migracao`. Consulte [agents/AGENTES.md
 ❯ Quais skills disponíveis?
 
 ⏺ Aqui estão as skills disponíveis:
+
+  Tray API - Início:
+  - /tray-api:visao-geral — Regras invariantes da API Tray (carregar primeiro)
 
   Tray API - Setup & Auth:
   - /tray-api:setup — Guia rápido de configuração inicial

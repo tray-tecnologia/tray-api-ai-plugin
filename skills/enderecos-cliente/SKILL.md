@@ -9,7 +9,19 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: endereço de cliente, endereço de entrega,
   endereço de cobrança, CEP, customer address, GET /customers/:id/addresses,
   POST /customers/:id/addresses, bairro, cidade, estado ou complemento de endereço.
+when_not_to_use: >
+  Não use para dados cadastrais do cliente (use tray-clientes) nem para perfis de
+  segmentação (use tray-perfis-cliente).
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Endereços de Clientes — Tray
 

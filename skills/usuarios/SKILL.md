@@ -6,7 +6,19 @@ description: >
 when_to_use: >
   Use quando o desenvolvedor mencionar: usuário administrativo, usuário da loja,
   GET /users, listar usuários, administrador da Tray ou user_id da loja.
+when_not_to_use: >
+  Não use para clientes da loja (use tray-clientes) nem para parceiros (use
+  tray-parceiros). API somente leitura para listar usuários administrativos.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Usuários — Tray
 

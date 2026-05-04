@@ -31,6 +31,9 @@ Documentação oficial: https://developers.tray.com.br
 
 Leia o arquivo correspondente antes de gerar código:
 
+**Entrada (carregar primeiro)**
+- Visão geral da API Tray: `skills/visao-geral/SKILL.md`
+
 **Autenticação e infra**
 - OAuth: `skills/autorizacao/SKILL.md`
 - Webhooks: `skills/webhooks/SKILL.md`

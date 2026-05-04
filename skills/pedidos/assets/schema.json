@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Order",
+  "description": "Payload para POST/PUT /orders na API Tray",
+  "type": "object",
+  "required": ["client_id"],
+  "properties": {
+    "client_id": {
+      "type": ["string", "number"],
+      "description": "ID do cliente que realizou o pedido"
+    },
+    "products": {
+      "type": "array",
+      "description": "Lista de produtos do pedido"
+    },
+    "status_id": {
+      "type": ["string", "number"],
+      "description": "ID do status do pedido"
+    },
+    "shipping_cost": {
+      "type": ["string", "number"],
+      "minimum": 0,
+      "description": "Custo do frete"
+    },
+    "shipping_method": {
+      "type": "string",
+      "description": "Método de envio"
+    },
+    "tracking_number": {
+      "type": "string",
+      "description": "Código de rastreamento"
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "Método de pagamento"
+    },
+    "coupon_code": {
+      "type": "string",
+      "description": "Código do cupom de desconto"
+    },
+    "discount": {
+      "type": ["string", "number"],
+      "minimum": 0,
+      "description": "Valor do desconto"
+    },
+    "total_amount": {
+      "type": ["string", "number"],
+      "minimum": 0,
+      "description": "Valor total do pedido"
+    }
+  },
+  "additionalProperties": true
+}

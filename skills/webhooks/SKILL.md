@@ -9,7 +9,28 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: webhook, notificação, evento, listener,
   endpoint receptor, escopo de notificação, product_stock, order_insert,
   payload x-www-form-urlencoded, retry de notificação ou sincronização em tempo real.
+when_not_to_use: >
+  Não use para notificações de pagamento — chegam via escopo order deste mesmo skill.
+  Para ativar escopos além de order, abra chamado no suporte Tray.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
+5. Execute `node skills/webhooks/scripts/validate.mjs '<payload_json>'`
+   para confirmar a estrutura do payload que vai gerar (ou processar). O
+   validador checa apenas **estrutura** (campos obrigatórios, tipos e campos
+   desconhecidos), nunca valores reais — então monte um payload sintético
+   com placeholders sempre que os valores vierem do listener, de variáveis
+   de ambiente ou de outras chamadas. Exemplo:
+   `node skills/webhooks/scripts/validate.mjs '{"seller_id":"<id>","scope_id":"<id>","scope_name":"order","act":"insert"}'`.
+   Corrija todos os erros antes de retornar o código ao usuário. Até 3
+   tentativas — se persistir, explique o problema ao usuário.
 
 # Sistema de Notificação (Webhook) — API Tray
 

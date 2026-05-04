@@ -9,7 +9,20 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: variação, SKU, tamanho, cor, modelo,
   atributo de produto, POST /variants, PUT /variants, estoque por variação,
   preço de variação, código EAN de SKU ou limitação de variantes por produto.
+when_not_to_use: >
+  Não use para o produto pai (use tray-produtos) nem para características informativas
+  sem estoque separado (use tray-caracteristicas). Use para SKUs com atributos como
+  cor e tamanho.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Variações de Produtos — Tray
 

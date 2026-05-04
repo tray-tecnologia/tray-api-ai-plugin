@@ -8,7 +8,19 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: emissor de etiqueta, label issuer,
   cadastrar URL de etiqueta, vincular etiqueta a pedido, POST /label_issuers,
   integração de etiqueta de envio ou sistema de emissão de etiquetas.
+when_not_to_use: >
+  Não use para etiquetas do HUB interno da Tray (use tray-etiquetas-hub) nem para
+  etiquetas do Mercado Livre (use tray-etiquetas-mercado-livre).
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Emissores de Etiqueta — Tray
 

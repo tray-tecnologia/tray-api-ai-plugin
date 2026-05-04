@@ -9,7 +9,19 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: calcular frete, cotação de frete, frete por CEP,
   GET /freights, peso do produto, dimensões para envio, formas de envio disponíveis,
   prazo de entrega, frete grátis ou Frete-X.
+when_not_to_use: >
+  Não use para criar ou configurar métodos de envio (use tray-configuracao-frete). Use
+  apenas para calcular frete por CEP ou listar métodos disponíveis.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Frete — Tray
 

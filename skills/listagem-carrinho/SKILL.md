@@ -8,7 +8,19 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: listar carrinhos, listagem de carrinhos,
   GET /carts/list, carrinhos abandonados em massa, paginação de carrinhos ou
   relatório de carrinhos.
+when_not_to_use: >
+  Não use para criar, consultar individualmente, atualizar ou excluir carrinhos (use
+  tray-carrinho-compras). Use apenas para listar todos os carrinhos da loja.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # Nova API de Listagem de Carrinho — Tray
 

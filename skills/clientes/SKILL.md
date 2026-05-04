@@ -9,7 +9,28 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: cliente, cadastrar cliente, atualizar
   cliente, CPF, CNPJ, pessoa física, pessoa jurídica, GET /customers, POST /customers,
   PUT /customers, endereço de cliente, validação de CPF, validação de CNPJ ou opt-in newsletter.
+when_not_to_use: >
+  Não use para endereços do cliente (use tray-enderecos-cliente), perfis/grupos de clientes
+  (use tray-perfis-cliente) nem para inscrições em newsletter (use tray-newsletter).
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
+5. Execute `node skills/clientes/scripts/validate.mjs '<payload_json>'`
+   para confirmar a estrutura do payload que vai gerar. O validador checa
+   apenas **estrutura** (campos obrigatórios, tipos e campos desconhecidos),
+   nunca valores reais — então monte um payload sintético com placeholders
+   sempre que os valores vierem de variáveis de ambiente, da entrada do
+   usuário ou de outras chamadas. Exemplo:
+   `node skills/clientes/scripts/validate.mjs '{"Customer":{"name":"<nome>","email":"<email>"}}'`.
+   Corrija todos os erros antes de retornar o código ao usuário. Até 3
+   tentativas — se persistir, explique o problema ao usuário.
 
 # API de Clientes — Tray
 

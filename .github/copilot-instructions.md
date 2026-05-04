@@ -2,7 +2,7 @@
 
 Documentação ativa da API da Tray para integração com GitHub Copilot.
 Este repositório contém a documentação completa de 150+ endpoints organizados
-em 34 skills, agentes especializados e fluxos de integração.
+em 35 skills, agentes especializados e fluxos de integração.
 
 Documentação oficial: https://developers.tray.com.br
 
@@ -41,6 +41,9 @@ Documentação oficial: https://developers.tray.com.br
 
 Antes de gerar código para um recurso da Tray, consulte o skill correspondente
 neste repositório:
+
+### Entrada (carregar primeiro)
+- Visão geral da API Tray: `skills/visao-geral/SKILL.md`
 
 ### Autenticação e infraestrutura
 - OAuth 2.0, tokens: `skills/autorizacao/SKILL.md`

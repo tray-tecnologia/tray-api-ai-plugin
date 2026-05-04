@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Customer",
+  "description": "Payload para POST/PUT /customers na API Tray",
+  "type": "object",
+  "required": ["name", "email"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome completo do cliente"
+    },
+    "email": {
+      "type": "string",
+      "description": "E-mail do cliente (obrigatório e único na plataforma)"
+    },
+    "cpf": {
+      "type": "string",
+      "maxLength": 14,
+      "description": "CPF do cliente pessoa física (11 dígitos)"
+    },
+    "cnpj": {
+      "type": "string",
+      "maxLength": 18,
+      "description": "CNPJ do cliente pessoa jurídica (14 dígitos)"
+    },
+    "rg": {
+      "type": "string",
+      "description": "RG do cliente"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone fixo"
+    },
+    "cellphone": {
+      "type": "string",
+      "description": "Celular"
+    },
+    "birth_date": {
+      "type": "string",
+      "description": "Data de nascimento no formato YYYY-MM-DD"
+    },
+    "gender": {
+      "type": "string",
+      "description": "Gênero do cliente"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Razão social (pessoa jurídica)"
+    },
+    "newsletter": {
+      "type": ["string", "number"],
+      "enum": ["0", "1", 0, 1],
+      "description": "0=não inscrito, 1=inscrito na newsletter"
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,21 +1,38 @@
 # Changelog
 
-## [Unreleased]
+## [1.2.0] - 2026-04-29
 
 ### Adicionado
 
+- `skills/visao-geral/SKILL.md` — skill de entrada com regras invariantes da API Tray (OAuth, payload com chave do recurso, rate limit, dados BR), carregada antes da skill do recurso para reforçar guardrails em todas as plataformas suportadas
+- Seção `## Antes de responder` em todos os 35 `SKILL.md`, com 4 ou 5 passos de verificação (método/endpoint, campos obrigatórios, sem credenciais literais, skill correta e — quando aplicável — execução de `validate.mjs`)
+- `skills/{autorizacao,produtos,pedidos,clientes,webhooks}/scripts/validate.mjs` — validadores executáveis de payload por schema, com até 3 tentativas de correção antes de devolver código ao usuário
+- `scripts/test-prompt-matcher.mjs` — regressão do `matcher` do hook `UserPromptSubmit` contra os prompts dos Blocos 1, 4, 5 e 6 do `docs/CENARIOS-DE-TESTE.md`, garantindo cobertura PT-BR e ausência de falso-positivo
+- `.github/workflows/ci.yml` — pipeline de CI no GitHub Actions rodando `npm run smoke` e `npm run version:check` em PRs e push para `main` (matriz Node 20 e 22)
+- `SECURITY.md` — política de divulgação responsável de vulnerabilidades, com canais privados (GitHub Private Vulnerability Reporting + e-mail), SLA de primeiro contato e escopo cobrindo hooks, scripts executáveis, manifests e conteúdo de prompt
+- `CONTRIBUTING.md` — guia de contribuição com fluxo de PR, regras de versão, validação local (smoke + version:check) e Conventional Commits
 - `package.json` na raiz para distribuição como pacote Node instalável
 - `.cursor-plugin/plugin.json` para manifesto nativo de distribuição no Cursor
 - `.codex-plugin/plugin.json` para manifesto nativo de distribuição no Codex
 - `gemini-extension.json` para extensão nativa no Gemini CLI
 - `scripts/sync-version.js` para sincronizar e validar versão entre todos os manifests
+- `scripts/smoke-test.js` — seção 11 valida o **contrato `{ok, reason}`** de todos os hooks tipo `prompt`. Diferencia hooks "informativos" (que injetam contexto sem decidir, como o `UserPromptSubmit`) de hooks "decisores" (que precisam declarar o schema oficial). Detecta o anti-padrão "prompt instrui não responda" que causa `hook stopped continuation` na origem
+- `docs/ANALISE-HOOK-POSTTOOLUSE-BASH.md` — documento técnico com análise profunda do bug do hook `PostToolUse:Bash`, validação cruzada com a documentação oficial de Claude Code e Cursor, matriz de viabilidade Opção × Plataforma e plano de validação manual
 
 ### Alterado
 
-- `.claude-plugin/plugin.json` e `.claude-plugin/marketplace.json` alinhados para versão `1.1.0`
-- `README.md` com fluxo de instalação via `npm`/`pnpm`/`bun` e instruções por ferramenta usando `node_modules`
-- `scripts/smoke-test.js` para validar também os novos manifests de distribuição
+- `hooks/hooks.json` — `matcher` do `UserPromptSubmit` reescrito para cobrir vocabulário PT-BR realista. O matcher antigo (`api.*tray|tray.*api|access_token|...`) só disparava com termos técnicos em inglês e não casava com prompts naturais como *"liste os produtos da minha loja Tray"*. O novo matcher usa classes de caracteres (`[Tt]ray`, `[Aa][Pp][Ii]`) e word boundaries para casar com **"loja Tray"**, **"API Tray"**, **"webhooks da Tray"**, **"produtos/pedidos/clientes da/na Tray"**, **"da minha Tray"**, etc., sem disparar em falsos positivos como **"bandeja (tray) de comida"** ou **"lib de UI chamada Tray"**. Validado contra os 18 cenários relevantes em `docs/CENARIOS-DE-TESTE.md` via `scripts/test-prompt-matcher.mjs`
+- `hooks/hooks.json` — prompt do `PostToolUse:Write|Edit` reescrito para retornar JSON estruturado `{"ok": true | false, "reason": "..."}` conforme schema oficial documentado em [Claude Code](http://code.claude.com/docs/en/hooks#prompt-based-hooks) e [Cursor](https://cursor.com/docs/hooks.md). Hooks tipo `prompt` **devem** retornar `{ok, reason}` JSON; instruir "não responda" em linguagem natural fazia a LLM gerar prosa em PT-BR que o orquestrador interpretava como bloqueio, disparando `PostToolUse:Write hook stopped continuation` em arquivos triviais como `.env.example`. As regras de detecção (credencial real hardcoded, payload sem chave do recurso, sugestão de `validate.mjs`, ignorar templates) foram preservadas — mudou apenas o **formato de saída**
+- `hooks/hooks.json` — bloco `PostToolUse:Bash` **removido**. Tinha o mesmo defeito estrutural do `Write|Edit` original (prompt instruía silêncio violando o contrato `{ok, reason}`), mas com efeito ainda pior: disparava `PostToolUse:Bash hook stopped continuation` em comandos triviais como `ls`, `find`, `git status`, **interrompendo o fluxo do agente em tarefas legítimas do plugin** (ex.: agente `configuracao-aplicativo` rodando o cenário 1.1 dos testes). A inteligência reativa que ele tentava prover (HTTP 401/429/400/404) foi migrada para o prompt do `UserPromptSubmit`, que é informativo e não bloqueia o fluxo
+- `hooks/hooks.json` — prompt do `UserPromptSubmit` ampliado com orientação proativa sobre erros HTTP da Tray: HTTP 401 (renovar via `refresh_token`), HTTP 429 (backoff exponencial / lotes; limites 180 req/min e 10.000 req/dia), HTTP 400 com erro de campo (rodar `skills/<recurso>/scripts/validate.mjs`), HTTP 404 (confirmar `api_address`, específico por loja). Mantém o caráter informativo e não-bloqueante explícito no prompt
+- `scripts/smoke-test.js` — adicionada seção 10 que executa `test-prompt-matcher.mjs` como regressão de CI; valida também os novos manifests de distribuição
+- Contagem de skills atualizada para **35** em `README.md`, `AGENTS.md`, `.github/copilot-instructions.md` e `.claude-plugin/marketplace.json`
+- `GEMINI.md`, `.aiassistant/rules/tray-api.md` e `.cursor/rules/tray-api.mdc` listam a nova skill `visao-geral` como entrypoint, carregada antes das skills de recurso
+- `README.md` agora referencia `SECURITY.md` e `CONTRIBUTING.md` na introdução, e descreve fluxo de instalação via `npm`/`pnpm`/`bun` e instruções por ferramenta usando `node_modules`
 - `package.json` com scripts `version:check` e `version:set`
+- `docs/CENARIOS-DE-TESTE.md` — sub-grupo 7B reescrito: cenários 7.5–7.8 agora validam o comportamento **migrado** (orientação HTTP via `UserPromptSubmit` proativo); 7.9 vira regressão crítica de "Bash trivial não dispara mais nada"; novo cenário 7.10 cobre prompts off-topic dentro do plugin
+- Passo 5 da seção "Antes de responder" reescrito nas 5 skills com schema (`autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`) deixando explícito que o validador checa apenas **estrutura** (campos obrigatórios, tipos, campos desconhecidos) — não valores reais — e que payloads sintéticos com placeholders são esperados quando os valores virão de variáveis de ambiente, callback OAuth, entrada do usuário ou outras chamadas. Cada skill ganhou um exemplo concreto reaproveitando os campos do schema. Motivação: na execução manual do cenário 1.1 (`docs/CENARIOS-DE-TESTE.md`), a IA pulou o passo 5 raciocinando *"o payload só tem campos vindos de env vars — não há JSON concreto pra passar ao validador"*, leitura razoável mas incorreta da redação anterior. A nova redação remove essa fricção sem mudar comportamento do validador
+- `scripts/lib/validate-schema.mjs` — quando `validate.mjs` é chamado sem payload, a mensagem de uso passou a incluir uma dica explícita de que o validador aceita placeholders nos valores. Reforça a mensagem das skills para quem invocar o validador interativamente
 
 ---
 

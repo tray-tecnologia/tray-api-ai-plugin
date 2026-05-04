@@ -10,7 +10,19 @@ when_to_use: >
   Use quando o desenvolvedor mencionar: nota fiscal, NF-e, DANFE, chave de acesso,
   CFOP, número de NF, GET /fiscal_notes, POST /fiscal_notes, integração com ERP fiscal,
   emitir nota ou vincular NF a pedido.
+when_not_to_use: >
+  Não use para criar pedidos (use tray-pedidos) nem para dados de pagamento (use
+  tray-pagamentos). Use apenas para registrar ou consultar NF-e associadas a pedidos.
 ---
+
+## Antes de responder
+
+> Execute estas verificações antes de gerar qualquer payload ou código:
+
+1. Confirme o método HTTP e endpoint correto para a operação solicitada.
+2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
+3. Verifique que `access_token` não aparece como literal string no código gerado.
+4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
 
 # API de Notas Fiscais (NF-e) — Tray
 

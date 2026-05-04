@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Auth",
+  "description": "Payload para POST /auth na API Tray (troca do code por tokens)",
+  "type": "object",
+  "required": ["consumer_key", "consumer_secret", "code"],
+  "properties": {
+    "consumer_key": {
+      "type": "string",
+      "description": "Chave do aplicativo (obtida ao criar o app na Tray)"
+    },
+    "consumer_secret": {
+      "type": "string",
+      "description": "Segredo do aplicativo"
+    },
+    "code": {
+      "type": "string",
+      "description": "Código de autorização recebido no callback (uso único)"
+    }
+  },
+  "additionalProperties": false
+}
