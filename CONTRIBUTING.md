@@ -21,9 +21,10 @@ visão diferente.
 Toda mudança precisa passar por:
 
 ```bash
-npm install
-npm run smoke           # valida JSON, frontmatter e payloads das skills
-npm run version:check   # valida consistência de versão entre manifests
+npm install              # instala devDependencies (ajv, ajv-formats)
+npm test                 # roda testes (≥ 200 casos)
+npm run smoke            # valida JSON, frontmatter, validate.mjs e lint-schemas
+npm run version:check    # valida consistência de versão entre manifests
 ```
 
 O CI roda os mesmos comandos em PRs (Node 20 e Node 22). PRs com smoke
@@ -49,8 +50,18 @@ PR direto na main, sem issue prévia. Smoke precisa passar.
    - `when_not_to_use` — quando direcionar para outra skill
 3. Seção `## Antes de responder` com checklist de verificações.
 4. Documente endpoints, campos obrigatórios, exemplos de payload e erros comuns.
-5. Se houver POST/PUT, crie `skills/<slug>/scripts/validate.mjs` validando o
-   payload (modelo: `skills/produtos/scripts/validate.mjs`).
+5. Se houver POST/PUT, criar **schemas multi-operação**:
+   - Crie `skills/<slug>/schemas/<recurso>.create.json` (POST) e
+     `skills/<slug>/schemas/<recurso>.update.json` (PUT) seguindo o
+     subset documentado em `scripts/lib/SUBSET.md`.
+   - Crie `skills/<slug>/scripts/validate.mjs` (CLI fino — copie de
+     `skills/produtos/scripts/validate.mjs` ajustando `skillName` e
+     `usageExample`).
+   - Crie `tests/validate/<slug>.test.mjs` com **≥ 5 casos válidos + 5
+     inválidos por operação**, incluindo pelo menos 2 testes de oracle
+     AJV (use `assertOracleAgrees` de `tests/validate/helpers/ajv-oracle.mjs`).
+   - Atualize o passo 5 do "Antes de responder" no `SKILL.md` listando
+     os schemas e citando `--schema=<op>`.
 6. Atualize a contagem em `README.md`, `AGENTS.md`,
    `.github/copilot-instructions.md` e `.claude-plugin/marketplace.json`.
 7. Adicione referência à skill em:
@@ -63,6 +74,38 @@ PR direto na main, sem issue prévia. Smoke precisa passar.
 
 O smoke test detecta automaticamente novas skills se o frontmatter estiver
 correto.
+
+### Como criar um schema novo
+
+Antes de criar um schema, **leia** [`scripts/lib/SUBSET.md`](scripts/lib/SUBSET.md)
+para saber quais features do JSON Schema Draft-07 são suportadas.
+
+1. Decida o nome no formato `<recurso>.<operação>.json` — ex.: `produto.create`,
+   `pedido.update`, `webhook.payload`. Operações típicas: `create`, `update`,
+   `payload`, `request`, `refresh`.
+2. Crie o arquivo em `skills/<skill>/schemas/<recurso>.<op>.json`.
+3. O `title` deve ser o nome do envelope esperado pela API Tray (PascalCase
+   da classe do recurso): `Product`, `Order`, `Customer`, etc. O CLI desembrulha
+   automaticamente via `payload[schema.title]`.
+4. Use `additionalProperties: false` por default — relaxe **só** se um bug
+   real provar que a Tray aceita campos não documentados.
+5. Adicione `description` em cada propriedade. O campo de descrição
+   raiz deve referenciar a doc oficial: `"https://developers.tray.com.br/..."`.
+6. Para campos brasileiros (CPF, CNPJ, CEP, EAN, NCM) use `format` em vez
+   de `pattern` — formats já incluem algoritmo de verificação de DV.
+7. Rode o lint: `node scripts/lint-schemas.mjs skills/<skill>/schemas/<recurso>.<op>.json`.
+8. Rode os testes: `npm test`.
+9. Atualize o passo 5 do `SKILL.md` da skill.
+
+### Como expandir o subset suportado
+
+O subset não cobre `oneOf`, `anyOf`, `allOf`, `$ref`, etc. Se um schema
+real exigir essas features:
+
+1. Não force — primeiro verifique se há jeito de modelar sem.
+2. Se não houver, abra issue prévia com o caso de uso concreto.
+3. A expansão segue o procedimento documentado no fim de
+   `scripts/lib/SUBSET.md`.
 
 ### Novo agente
 
