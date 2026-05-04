@@ -22,6 +22,7 @@
 - [Bloco 8 — Smoke test ferramentas secundárias](#bloco-8--smoke-test-ferramentas-secundárias)
 - [Bloco 9 — `validate.mjs` v2 (CLI e output)](#bloco-9--validatemjs-v2-cli-e-output)
 - [Bloco 10 — Formats BR detectados pelo schema](#bloco-10--formats-br-detectados-pelo-schema)
+- [Bloco 11 — Skills novas com `validate.mjs`](#bloco-11--skills-novas-com-validatemjs)
 - [Próximos passos (robustez futura)](#próximos-passos-robustez-futura)
 
 ## Como usar este documento
@@ -1632,6 +1633,103 @@ A IA deve:
 - [ ] **Exit 1 inicial, mensagem sobre YYYY-MM-DD**
 - [ ] **A IA corrigiu a data antes de re-rodar**
 - [ ] **Re-validação aprovou** após correção
+
+#### Observações
+
+```
+```
+
+## Bloco 11 — Skills novas com `validate.mjs`
+
+> Aplicável a Claude Code · Cursor · Codex. Testa que as 3 skills novas
+> (`tray-variacoes`, `tray-categorias`, `tray-marcas`) ganham `validate.mjs`
+> na 1.3.0 e que a IA usa o validador antes de chamar a API.
+
+### 11.1 — Cadastro de variação de produto
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 11 — skills novas
+**O que valida:** A IA seleciona `tray-variacoes` (não `tray-produtos`), monta payload com `Variant` envelope, roda `validate.mjs --schema=variacao.create` e o validador aprova.
+
+#### Prompt (copy-paste)
+
+> Adicione uma variação azul tamanho M do produto 42 na minha loja Tray, SKU 'CAM-AZ-M', preço 49.90, estoque 30.
+
+#### Resultado esperado
+
+1. Skill: `tray-variacoes` (não `tray-produtos`).
+2. Roda `validate.mjs --schema=variacao.create '{"Variant":{"sku":"CAM-AZ-M","price":49.9,"stock":30}}'`.
+3. Exit `0`.
+4. Endpoint: `POST {api_address}/products/42/variants?access_token=...`.
+
+#### Checklist
+
+- [ ] **Skill correta:** `tray-variacoes`
+- [ ] **`validate.mjs --schema=variacao.create` foi executado**
+- [ ] **Endpoint:** `/products/42/variants`
+- [ ] **Body envelope `{"Variant":{...}}`**
+
+#### Observações
+
+```
+```
+
+---
+
+### 11.2 — Cadastro de categoria
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 11
+**O que valida:** A IA usa `tray-categorias` e `validate.mjs --schema=categoria.create` antes de chamar a API.
+
+#### Prompt (copy-paste)
+
+> Crie uma categoria 'Esportes' na minha Tray, dentro da categoria-pai 'Masculino' (id 5).
+
+#### Resultado esperado
+
+1. Skill: `tray-categorias`.
+2. Roda `validate.mjs --schema=categoria.create '{"Category":{"name":"Esportes","parent_id":5}}'`.
+3. Exit `0`.
+4. Endpoint: `POST {api_address}/categories`.
+
+#### Checklist
+
+- [ ] **Skill correta:** `tray-categorias`
+- [ ] **`validate.mjs --schema=categoria.create` executado**
+- [ ] **Body envelope `{"Category":{...}}`**
+
+#### Observações
+
+```
+```
+
+---
+
+### 11.3 — Cadastro de marca com pattern de slug
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 11
+**O que valida:** `marca.create` valida `slug` contra `pattern: ^[a-z0-9-]+$`. A IA testa primeiro um slug inválido, é rejeitada, corrige e re-valida.
+
+#### Prompt (copy-paste)
+
+> Crie a marca 'Nike Air' na Tray. Use o slug 'Nike Air' como URL amigável.
+
+#### Resultado esperado
+
+1. Skill: `tray-marcas`.
+2. Primeira tentativa: `validate.mjs --schema=marca.create '{"Brand":{"name":"Nike Air","slug":"Nike Air"}}'` → exit `1` com mensagem mencionando `pattern`.
+3. A IA corrige slug para `'nike-air'` (lowercase, hífen) e re-valida.
+4. Segunda tentativa exit `0`.
+5. Endpoint: `POST {api_address}/brands`.
+
+#### Checklist
+
+- [ ] **Skill correta:** `tray-marcas`
+- [ ] **Primeira validação falhou (pattern)**
+- [ ] **A IA corrigiu o slug** (lowercase + hífen)
+- [ ] **Segunda validação aprovou**
 
 #### Observações
 
