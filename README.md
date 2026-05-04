@@ -294,6 +294,81 @@ Formats brasileiros (CPF/CNPJ/CEP/EAN/NCM com algoritmos de DV; date e
 datetime no formato Tray) são implementados em
 [`scripts/lib/formats-br.mjs`](scripts/lib/formats-br.mjs).
 
+## Busca em docs com `search_docs.mjs`
+
+A skill `tray-dev` indexa localmente `https://developers.tray.com.br` e oferece busca rápida (BM25) sobre todos os endpoints, parâmetros, exemplos e códigos de erro da API Tray.
+
+### Uso
+
+```bash
+# Busca por termo
+node skills/tray-dev/scripts/search_docs.mjs "como autenticar via OAuth"
+
+# Restringir por recurso
+node skills/tray-dev/scripts/search_docs.mjs --topic=pedidos "cancelamento"
+
+# Output JSON estruturado
+node skills/tray-dev/scripts/search_docs.mjs --json "webhook"
+
+# Forçar refresh da doc
+node skills/tray-dev/scripts/search_docs.mjs --refresh
+
+# Listar tópicos disponíveis
+node skills/tray-dev/scripts/search_docs.mjs --list-topics
+```
+
+### Cache
+
+O primeiro uso baixa a SPA pública (~625 KB) e indexa em `~/.cache/tray-plugin/dev-docs/`. Execuções subsequentes (24h) usam cache. Override via env vars:
+
+- `TRAY_DOCS_CACHE_DIR` — diretório do cache
+- `TRAY_DOCS_CACHE_TTL_MS` — TTL em milissegundos (default 86400000 = 24h)
+
+### Privacidade (telemetria opt-out)
+
+Por padrão, o `search_docs.mjs` envia o header `X-Tray-AI-Telemetry: on` para `developers.tray.com.br` indicando que a chamada veio do plugin. **Nenhuma query é enviada no header.**
+
+Para desativar:
+
+```bash
+export OPT_OUT_INSTRUMENTATION=true
+```
+
+### Exit codes
+
+- `0` query OK (mesmo se 0 resultados)
+- `1` erro de execução (rede falha + sem cache)
+- `2` erro de uso (flag desconhecida, query vazia, topic inexistente)
+
+### Output JSON
+
+```json
+{
+  "query": "OAuth",
+  "expandedQuery": ["oauth","autentic","token","acess"],
+  "topic": null,
+  "results": [
+    {
+      "title": "Gerar Chaves de Acesso",
+      "url": "https://developers.tray.com.br/#gerar-chaves-de-acesso",
+      "snippet": "...",
+      "score": 0.92,
+      "topic": "autorizacao",
+      "h1": "Autorização",
+      "level": "h2",
+      "anchor": "gerar-chaves-de-acesso"
+    }
+  ],
+  "totalResults": 12,
+  "took": 47,
+  "cache": { "hit": true, "ageMs": 3600000, "ttlMs": 86400000 }
+}
+```
+
+### Sinônimos PT-BR
+
+A busca expande termos PT-BR para equivalentes da API (`autenticar` ↔ `oauth`, `criar` ↔ `POST`, etc.). O dicionário fica em `skills/tray-dev/assets/synonyms-pt-br.json`. Para expandir, abra um PR.
+
 ## Contribuindo
 
 Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-claude-plugin).
