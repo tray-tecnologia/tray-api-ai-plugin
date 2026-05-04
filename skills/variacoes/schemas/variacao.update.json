@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Variant",
+  "description": "Payload de atualização parcial de variação via PUT /products/:id/variants/:variant_id.",
+  "type": "object",
+  "properties": {
+    "reference": { "type": "string" },
+    "sku": { "type": "string" },
+    "price": { "type": "number", "minimum": 0 },
+    "stock": { "type": "integer", "minimum": 0 },
+    "ean": { "type": "string", "format": "ean" },
+    "weight": { "type": "number", "minimum": 0 },
+    "length": { "type": "number", "minimum": 0 },
+    "width": { "type": "number", "minimum": 0 },
+    "height": { "type": "number", "minimum": 0 }
+  },
+  "additionalProperties": false
+}

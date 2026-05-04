@@ -23,6 +23,23 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
+5. Execute o validador local antes de gerar código que monta o payload:
+
+   ```
+   node skills/variacoes/scripts/validate.mjs --schema=<variacao.create|variacao.update> '<payload_json>'
+   ```
+
+   Schemas disponíveis:
+   - `variacao.create` — POST /products/:id/variants (require `price`).
+   - `variacao.update` — PUT /products/:id/variants/:variant_id (todos opcionais).
+
+   `reference` ou `sku` são opcionais individualmente, mas a Tray exige
+   pelo menos um para identificar a variação. Se nenhum for enviado a
+   plataforma gera um automaticamente.
+
+   Para output programático use `--json`. Exit codes: `0`/`1`/`2`.
+
+   Corrija todos os erros antes de retornar o código. Até 3 tentativas.
 
 # API de Variações de Produtos — Tray
 

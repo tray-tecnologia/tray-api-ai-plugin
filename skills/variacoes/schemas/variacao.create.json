@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Variant",
+  "description": "Payload de criação de variação via POST /products/:id/variants. Aceita reference OU sku como identificador (ambos opcionais; se nenhum for enviado, a Tray gera). Doc: https://developers.tray.com.br/#api-de-variacoes-de-produtos",
+  "type": "object",
+  "properties": {
+    "reference": {
+      "type": "string",
+      "description": "Referência interna da variação (alternativa ao sku)."
+    },
+    "sku": {
+      "type": "string",
+      "description": "SKU único da variação."
+    },
+    "price": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Preço de venda em reais."
+    },
+    "stock": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Quantidade em estoque desta variação."
+    },
+    "ean": {
+      "type": "string",
+      "format": "ean",
+      "description": "Código de barras GTIN da variação."
+    },
+    "weight": { "type": "number", "minimum": 0 },
+    "length": { "type": "number", "minimum": 0 },
+    "width": { "type": "number", "minimum": 0 },
+    "height": { "type": "number", "minimum": 0 }
+  },
+  "required": ["price"],
+  "additionalProperties": false
+}
