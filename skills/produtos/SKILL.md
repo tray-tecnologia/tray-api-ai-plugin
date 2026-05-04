@@ -14,6 +14,32 @@ when_not_to_use: >
   kits/combos (use tray-kits) nem para características informativas (use tray-caracteristicas).
 ---
 
+## MANDATORY: Tool Calls Required Before Answering
+
+> **Estas chamadas são OBRIGATÓRIAS, não opcionais.** Execute-as antes de gerar
+> qualquer código ou payload. Se você está respondendo sem ter chamado as duas
+> ferramentas abaixo, **pare e chame agora**.
+
+### 1. Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=produtos "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+### 2. Validar payload localmente (antes de retornar código)
+
+```bash
+node skills/produtos/scripts/validate.mjs --schema=<SCHEMA_NAME> '<payload_json>'
+```
+
+- Schemas disponíveis: `produto.create`, `produto.update`. Use `--list-schemas` para confirmar.
+- Exit codes: `0` válido · `1` inválido · `2` erro de uso.
+- Para output programático: `--json`.
+- Corrija todos os erros antes de retornar o código (até 3 tentativas).
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:
@@ -22,27 +48,6 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute o validador local antes de gerar código que monta o payload:
-
-   ```
-   node skills/produtos/scripts/validate.mjs --schema=<produto.create|produto.update> '<payload_json>'
-   ```
-
-   Schemas disponíveis:
-   - `produto.create` — POST /products (require `name` e `price`).
-   - `produto.update` — PUT /products/:id (todos opcionais; PUT só com `price` é válido).
-
-   O validador checa estrutura (campos obrigatórios, tipos, formats EAN/NCM,
-   campos desconhecidos) — não valores reais. Exemplo:
-
-   ```
-   node skills/produtos/scripts/validate.mjs --schema=produto.create '{"Product":{"name":"<nome>","price":<preço>}}'
-   ```
-
-   Para output programático use `--json`. Exit codes: `0` válido · `1`
-   inválido · `2` erro de uso.
-
-   Corrija todos os erros antes de retornar o código. Até 3 tentativas.
 
 # API de Produtos — Tray
 

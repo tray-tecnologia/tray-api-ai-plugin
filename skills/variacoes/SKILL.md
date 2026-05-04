@@ -15,6 +15,32 @@ when_not_to_use: >
   cor e tamanho.
 ---
 
+## MANDATORY: Tool Calls Required Before Answering
+
+> **Estas chamadas são OBRIGATÓRIAS, não opcionais.** Execute-as antes de gerar
+> qualquer código ou payload. Se você está respondendo sem ter chamado as duas
+> ferramentas abaixo, **pare e chame agora**.
+
+### 1. Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=variacoes "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+### 2. Validar payload localmente (antes de retornar código)
+
+```bash
+node skills/variacoes/scripts/validate.mjs --schema=<SCHEMA_NAME> '<payload_json>'
+```
+
+- Schemas disponíveis: `variacao.create`, `variacao.update`. Use `--list-schemas` para confirmar.
+- Exit codes: `0` válido · `1` inválido · `2` erro de uso.
+- Para output programático: `--json`.
+- Corrija todos os erros antes de retornar o código (até 3 tentativas).
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:
@@ -23,23 +49,6 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute o validador local antes de gerar código que monta o payload:
-
-   ```
-   node skills/variacoes/scripts/validate.mjs --schema=<variacao.create|variacao.update> '<payload_json>'
-   ```
-
-   Schemas disponíveis:
-   - `variacao.create` — POST /products/:id/variants (require `price`).
-   - `variacao.update` — PUT /products/:id/variants/:variant_id (todos opcionais).
-
-   `reference` ou `sku` são opcionais individualmente, mas a Tray exige
-   pelo menos um para identificar a variação. Se nenhum for enviado a
-   plataforma gera um automaticamente.
-
-   Para output programático use `--json`. Exit codes: `0`/`1`/`2`.
-
-   Corrija todos os erros antes de retornar o código. Até 3 tentativas.
 
 # API de Variações de Produtos — Tray
 

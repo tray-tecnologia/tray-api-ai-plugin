@@ -14,6 +14,32 @@ when_not_to_use: >
   Para ativar escopos além de order, abra chamado no suporte Tray.
 ---
 
+## MANDATORY: Tool Calls Required Before Answering
+
+> **Estas chamadas são OBRIGATÓRIAS, não opcionais.** Execute-as antes de gerar
+> qualquer código ou payload. Se você está respondendo sem ter chamado as duas
+> ferramentas abaixo, **pare e chame agora**.
+
+### 1. Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=webhooks "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+### 2. Validar payload localmente (antes de retornar código)
+
+```bash
+node skills/webhooks/scripts/validate.mjs --schema=webhook.payload '<payload_json>'
+```
+
+- Schemas disponíveis: `webhook.payload`. Use `--list-schemas` para confirmar.
+- Exit codes: `0` válido · `1` inválido · `2` erro de uso.
+- Para output programático: `--json`.
+- Corrija todos os erros antes de retornar o código (até 3 tentativas).
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:
@@ -22,20 +48,6 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute o validador local antes de gerar código que processa o payload:
-
-   ```
-   node skills/webhooks/scripts/validate.mjs '<payload_recebido>'
-   ```
-
-   Schema único: `webhook.payload`. Como há só 1 schema, `--schema=` é
-   opcional (use `--list-schemas` para conferir).
-
-   Valida `seller_id`, `scope_id` (integer); `scope_name` em enum
-   (product, order, customer, variant, order_status, order_payment, order_invoice);
-   `act` em enum (insert, update, delete).
-
-   Para output programático use `--json`. Exit codes: `0`/`1`/`2`.
 
 # Sistema de Notificação (Webhook) — API Tray
 

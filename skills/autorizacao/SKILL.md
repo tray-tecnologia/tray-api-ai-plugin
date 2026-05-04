@@ -16,6 +16,32 @@ when_not_to_use: >
   refresh_token.
 ---
 
+## MANDATORY: Tool Calls Required Before Answering
+
+> **Estas chamadas são OBRIGATÓRIAS, não opcionais.** Execute-as antes de gerar
+> qualquer código ou payload. Se você está respondendo sem ter chamado as duas
+> ferramentas abaixo, **pare e chame agora**.
+
+### 1. Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=autorizacao "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+### 2. Validar payload localmente (antes de retornar código)
+
+```bash
+node skills/autorizacao/scripts/validate.mjs --schema=<SCHEMA_NAME> '<payload_json>'
+```
+
+- Schemas disponíveis: `auth-request`, `auth-refresh`. Use `--list-schemas` para confirmar.
+- Exit codes: `0` válido · `1` inválido · `2` erro de uso.
+- Para output programático: `--json`.
+- Corrija todos os erros antes de retornar o código (até 3 tentativas).
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:
@@ -24,28 +50,6 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute o validador local antes de gerar código que monta o payload:
-
-   ```
-   node skills/autorizacao/scripts/validate.mjs --schema=<auth-request|auth-refresh> '<payload_json>'
-   ```
-
-   Schemas disponíveis (consulte com `--list-schemas`):
-   - `auth-request` — POST /auth (etapa 3 OAuth, troca de code por token).
-   - `auth-refresh` — GET /auth (renovação via refresh_token).
-
-   O validador checa apenas **estrutura** (campos obrigatórios, tipos e
-   campos desconhecidos) — nunca valores reais. Para placeholders use:
-
-   ```
-   node skills/autorizacao/scripts/validate.mjs --schema=auth-request '{"consumer_key":"<env>","consumer_secret":"<env>","code":"<callback>"}'
-   ```
-
-   Para output programático (parseável), use `--json`. Exit codes:
-   `0` válido · `1` inválido · `2` erro de uso.
-
-   Corrija todos os erros antes de retornar o código ao usuário. Até 3
-   tentativas — se persistir, explique o problema ao usuário.
 
 # Autorização — API Tray
 
