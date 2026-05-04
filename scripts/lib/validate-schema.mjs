@@ -185,8 +185,6 @@ export function validatePayload(schema, payload) {
   return errors;
 }
 
-/* ─── runValidator (esqueleto; flags em Task 8) ─────────────────────── */
-
 /**
  * Lê stdin de forma portável, retornando string vazia se TTY.
  */
@@ -202,28 +200,97 @@ async function resolveRawPayload(positional) {
   return await readStdin();
 }
 
-/**
- * Helper de alto nível usado por cada skills/<recurso>/scripts/validate.mjs.
- * Em Task 8 esta função ganha suporte a --json, --schema, --list-schemas.
- * Esta versão da Task 6 é o esqueleto compatível com a v1.
- */
+/* ─── CLI argv parsing ─────────────────────────────────────────────── */
+
+function parseArgs(argv) {
+  const out = { json: false, listSchemas: false, schema: null, positional: null, help: false };
+  for (const arg of argv) {
+    if (arg === '--json') out.json = true;
+    else if (arg === '--list-schemas') out.listSchemas = true;
+    else if (arg === '--help' || arg === '-h') out.help = true;
+    else if (arg.startsWith('--schema=')) out.schema = arg.slice('--schema='.length);
+    else if (!out.positional) out.positional = arg;
+  }
+  return out;
+}
+
+function listSchemasInDir(schemasDir) {
+  if (!existsSync(schemasDir)) return [];
+  return readdirSync(schemasDir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => basename(f, '.json'))
+    .sort();
+}
+
+function printUsage(skillName, schemas) {
+  console.error(`Uso: node skills/${skillName}/scripts/validate.mjs [--schema=<op>] [--json] '<payload>'`);
+  console.error(`     ou: echo '<payload>' | node skills/${skillName}/scripts/validate.mjs [--schema=<op>] [--json]`);
+  console.error(`     ou: node skills/${skillName}/scripts/validate.mjs --list-schemas`);
+  if (schemas.length > 0) {
+    console.error(`Schemas disponíveis: ${schemas.join(', ')}`);
+  }
+}
+
+/* ─── runValidator v2 ──────────────────────────────────────────────── */
+
 export async function runValidator({ callerUrl, skillName, usageExample }) {
   const __dir = dirname(fileURLToPath(callerUrl));
-  // Caminho legado (assets/schema.json) — Task 8 substitui por schemas/
-  const legacyPath = join(__dir, '..', 'assets', 'schema.json');
+  const schemasDir = join(__dir, '..', 'schemas');
+  const schemas = listSchemasInDir(schemasDir);
+  const args = parseArgs(process.argv.slice(2));
 
-  let schema;
-  try {
-    schema = JSON.parse(readFileSync(legacyPath, 'utf-8'));
-  } catch (e) {
-    console.error(`❌ Schema não encontrado em ${legacyPath}: ${e.message}`);
+  if (args.help) {
+    printUsage(skillName, schemas);
+    process.exit(0);
+  }
+
+  if (args.listSchemas) {
+    if (schemas.length === 0) {
+      console.error(`Nenhum schema encontrado em ${schemasDir}`);
+      process.exit(2);
+    }
+    console.log(`Schemas disponíveis para skill "${skillName}":`);
+    for (const s of schemas) console.log(`  ${s}`);
+    process.exit(0);
+  }
+
+  if (schemas.length === 0) {
+    console.error(`❌ Skill "${skillName}" não tem schemas em ${schemasDir}.`);
     process.exit(2);
   }
 
-  const raw = await resolveRawPayload(process.argv[2]);
+  // Selecionar schema
+  let schemaName;
+  if (args.schema) {
+    if (!schemas.includes(args.schema)) {
+      console.error(`❌ Schema "${args.schema}" não existe na skill "${skillName}".`);
+      console.error(`   Schemas disponíveis: ${schemas.join(', ')}`);
+      process.exit(2);
+    }
+    schemaName = args.schema;
+  } else if (schemas.length === 1) {
+    schemaName = schemas[0];
+  } else {
+    console.error(`❌ Skill "${skillName}" tem múltiplos schemas. Use --schema=<nome>.`);
+    console.error(`   Schemas disponíveis: ${schemas.join(', ')}`);
+    process.exit(2);
+  }
+
+  const schemaPath = join(schemasDir, `${schemaName}.json`);
+  let schema;
+  try {
+    schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
+  } catch (e) {
+    console.error(`❌ Schema não pôde ser carregado: ${e.message}`);
+    process.exit(2);
+  }
+
+  // Resolver payload
+  const raw = await resolveRawPayload(args.positional);
   if (!raw) {
-    console.error(`❌ Nenhum payload fornecido para skill "${skillName}".`);
-    console.error(`   Uso: node validate.mjs '${usageExample}'`);
+    console.error(`❌ Nenhum payload fornecido.`);
+    printUsage(skillName, schemas);
+    if (usageExample) console.error(`Exemplo: ${usageExample}`);
     process.exit(2);
   }
 
@@ -235,6 +302,7 @@ export async function runValidator({ callerUrl, skillName, usageExample }) {
     process.exit(2);
   }
 
+  // Desembrulhar envelope se aplicável
   if (
     schema.title &&
     payload[schema.title] &&
@@ -247,16 +315,38 @@ export async function runValidator({ callerUrl, skillName, usageExample }) {
   const errors = validatePayload(schema, payload);
 
   if (errors.length === 0) {
-    console.log('✅ Payload válido — pode prosseguir.');
+    if (args.json) {
+      console.log(JSON.stringify({
+        valid: true,
+        schema: schemaName,
+        validatorVersion: VALIDATOR_VERSION,
+      }, null, 2));
+    } else {
+      console.log('✅ Payload válido — pode prosseguir.');
+    }
     process.exit(0);
   }
 
-  const attempt = process.env.VALIDATE_ATTEMPT ?? '1';
-  console.error(`❌ Validação falhou — ${errors.length} erro${errors.length > 1 ? 's' : ''}:`);
-  for (const err of errors) {
-    console.error(`  • ${err.message}`);
-    console.error(`    ${err.hint}`);
+  if (args.json) {
+    console.log(JSON.stringify({
+      valid: false,
+      errors: errors.map((e) => ({
+        path: e.path,
+        keyword: e.keyword,
+        message: e.message,
+        suggestion: e.hint?.replace(/^→\s*/, '') ?? '',
+      })),
+      schema: schemaName,
+      validatorVersion: VALIDATOR_VERSION,
+    }, null, 2));
+  } else {
+    const attempt = process.env.VALIDATE_ATTEMPT ?? '1';
+    console.error(`❌ Validação falhou — ${errors.length} erro${errors.length > 1 ? 's' : ''}:`);
+    for (const err of errors) {
+      console.error(`  • ${err.message}`);
+      console.error(`    ${err.hint}`);
+    }
+    console.error(`\nCorrija e tente novamente (tentativa ${attempt}/3).`);
   }
-  console.error(`\nCorrija e tente novamente (tentativa ${attempt}/3).`);
   process.exit(1);
 }

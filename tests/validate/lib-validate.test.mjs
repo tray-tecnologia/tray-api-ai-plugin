@@ -1,5 +1,10 @@
 import { describe, test } from 'node:test';
 import { strict as assert } from 'node:assert';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { validatePayload, matchesType } from '../../scripts/lib/validate-schema.mjs';
 import { assertOracleAgrees } from './helpers/ajv-oracle.mjs';
 import * as fx from './helpers/fixtures.mjs';
@@ -164,4 +169,134 @@ describe('matchesType', () => {
   test('object rejeita array', () => assert.equal(matchesType([], 'object'), false));
   test('null', () => assert.equal(matchesType(null, 'null'), true));
   test('union string|null', () => assert.equal(matchesType(null, ['string', 'null']), true));
+});
+
+const ROOT = join(fileURLToPath(import.meta.url), '..', '..', '..');
+
+function makeFakeSkill(skillName, schemas) {
+  const dir = join(tmpdir(), `tray-validate-test-${Date.now()}-${skillName}`);
+  mkdirSync(join(dir, 'schemas'), { recursive: true });
+  mkdirSync(join(dir, 'scripts'), { recursive: true });
+  for (const [name, schema] of Object.entries(schemas)) {
+    writeFileSync(join(dir, 'schemas', `${name}.json`), JSON.stringify(schema));
+  }
+  // CLI fino que chama runValidator com `__dir` apontando para esta skill fake
+  const cli = `
+import { runValidator } from '${join(ROOT, 'scripts/lib/validate-schema.mjs').replace(/\\/g, '/')}';
+await runValidator({
+  callerUrl: import.meta.url,
+  skillName: '${skillName}',
+  usageExample: '{}',
+});
+`;
+  writeFileSync(join(dir, 'scripts', 'validate.mjs'), cli);
+  return { dir, cli: join(dir, 'scripts', 'validate.mjs') };
+}
+
+function run(cli, args, { input } = {}) {
+  return spawnSync('node', [cli, ...args], { input, encoding: 'utf-8' });
+}
+
+describe('runValidator — CLI', () => {
+  const minimal = {
+    title: 'Test',
+    type: 'object',
+    properties: { name: { type: 'string' } },
+    required: ['name'],
+    additionalProperties: false,
+  };
+
+  test('exit 0 — payload válido', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--schema=foo.create', '{"Test":{"name":"X"}}']);
+    assert.equal(r.status, 0, r.stderr);
+    assert.match(r.stdout, /Payload válido/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 1 — payload inválido (humano)', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--schema=foo.create', '{"Test":{}}']);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /name.*obrigatório/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 1 — payload inválido (--json)', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--json', '--schema=foo.create', '{"Test":{}}']);
+    assert.equal(r.status, 1);
+    const out = JSON.parse(r.stdout);
+    assert.equal(out.valid, false);
+    assert.equal(out.errors.length, 1);
+    assert.equal(out.errors[0].keyword, 'required');
+    assert.equal(out.schema, 'foo.create');
+    assert.equal(out.validatorVersion, '2.0.0');
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 0 — payload válido com --json', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--json', '--schema=foo.create', '{"Test":{"name":"X"}}']);
+    assert.equal(r.status, 0);
+    const out = JSON.parse(r.stdout);
+    assert.equal(out.valid, true);
+    assert.equal(out.schema, 'foo.create');
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 2 — múltiplos schemas sem --schema', () => {
+    const { cli, dir } = makeFakeSkill('foo', {
+      'foo.create': minimal,
+      'foo.update': minimal,
+    });
+    const r = run(cli, ['{"Test":{"name":"X"}}']);
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /múltiplos schemas/);
+    assert.match(r.stderr, /foo\.create.*foo\.update/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 2 — schema inexistente', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--schema=foo.update', '{"Test":{"name":"X"}}']);
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /não existe/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 2 — JSON malformado', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--schema=foo.create', '{name: "X"}']);
+    assert.equal(r.status, 2);
+    assert.match(r.stderr, /JSON válido/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('exit 0 — --list-schemas', () => {
+    const { cli, dir } = makeFakeSkill('foo', {
+      'foo.create': minimal,
+      'foo.update': minimal,
+    });
+    const r = run(cli, ['--list-schemas']);
+    assert.equal(r.status, 0);
+    assert.match(r.stdout, /foo\.create/);
+    assert.match(r.stdout, /foo\.update/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('stdin — payload via pipe', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.create': minimal });
+    const r = run(cli, ['--schema=foo.create'], { input: '{"Test":{"name":"X"}}' });
+    assert.equal(r.status, 0);
+    assert.match(r.stdout, /Payload válido/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('skill com 1 schema — sem flag funciona', () => {
+    const { cli, dir } = makeFakeSkill('foo', { 'foo.payload': minimal });
+    const r = run(cli, ['{"Test":{"name":"X"}}']);
+    assert.equal(r.status, 0);
+    rmSync(dir, { recursive: true });
+  });
 });
