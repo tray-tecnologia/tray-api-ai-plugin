@@ -46,6 +46,21 @@ Documentação oficial: https://developers.tray.com.br
 - Formats BR custom: `cpf`, `cnpj`, `cep`, `ean`, `ncm`, `date`, `datetime`,
   `email`, `uri`. Detalhes em `scripts/lib/SUBSET.md`.
 
+### Busca em docs
+
+Para confirmar comportamento da API antes de gerar código, use a skill `tray-dev`:
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --topic=<slug> "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --json "<termo>"
+```
+
+- Cache local em `~/.cache/tray-plugin/dev-docs/` (TTL 24h)
+- Exit codes: 0 (ok), 1 (erro execução), 2 (erro de uso)
+- Tópicos: `--list-topics` para a lista canônica
+- Privacidade: `OPT_OUT_INSTRUMENTATION=true` desativa telemetria
+
 ---
 
 ## Documentação por recurso
@@ -98,6 +113,9 @@ neste repositório:
 - SEO: `skills/palavras-chave/SKILL.md`
 - Parceiros: `skills/parceiros/SKILL.md`
 - Newsletter: `skills/newsletter/SKILL.md`
+
+### Busca em docs (`tray-dev`)
+- `skills/tray-dev/SKILL.md` — busca lexical local em developers.tray.com.br (BM25 + sinônimos PT-BR + cache 24h)
 
 ---
 
