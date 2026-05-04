@@ -28,6 +28,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Instalar devDependencies
+        run: npm ci
+
+      - name: Rodar testes (node --test)
+        run: npm test
 
       - name: Validar JSON, frontmatter e payloads das skills
         run: npm run smoke
