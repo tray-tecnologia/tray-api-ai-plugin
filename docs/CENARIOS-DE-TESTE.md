@@ -1923,6 +1923,143 @@ A IA deve:
 ```
 ```
 
+## Bloco 13 — `lint-skills.mjs` (P1.4)
+
+Cobre o linter de conformidade do bloco MANDATORY introduzido em 1.5.0. Valida que cada SKILL.md de recurso tem o bloco no formato correto, antes do `## Antes de responder`, com os comandos esperados (`search_docs.mjs` sempre; `validate.mjs` para categoria A).
+
+### 13.1 — Linter aprova skill bem formada (categoria A)
+
+#### Pré-condições
+
+- Repo limpo na versão 1.5.0+.
+
+#### Comando
+
+```bash
+node scripts/lint-skills.mjs skills/produtos/SKILL.md
+```
+
+#### Resultado esperado
+
+- Exit code: `0`.
+- Saída: `✅ <caminho>/skills/produtos/SKILL.md`.
+
+#### Observações
+
+```
+```
+
+### 13.2 — Linter detecta ausência do bloco MANDATORY (regra R1)
+
+#### Pré-condições
+
+- Copiar `skills/produtos/SKILL.md` para um temporário e remover manualmente o bloco `## MANDATORY: Tool Calls Required Before Answering` (e o conteúdo entre ele e `## Antes de responder`).
+
+#### Comando
+
+```bash
+node scripts/lint-skills.mjs <caminho_temporario>/SKILL.md
+```
+
+#### Resultado esperado
+
+- Exit code: `1`.
+- Saída cita regra `R1` (header MANDATORY ausente).
+
+#### Observações
+
+```
+```
+
+### 13.3 — Linter rejeita posição do MANDATORY após "Antes de responder" (regra R2)
+
+#### Pré-condições
+
+- Mover o bloco `## MANDATORY: ...` para DEPOIS da seção `## Antes de responder` (em arquivo temporário).
+
+#### Comando
+
+```bash
+node scripts/lint-skills.mjs <caminho_temporario>/SKILL.md
+```
+
+#### Resultado esperado
+
+- Exit code: `1`.
+- Saída cita regra `R2` (posição inválida).
+
+#### Observações
+
+```
+```
+
+### 13.4 — Linter rejeita Categoria A sem `validate.mjs` no MANDATORY (regra R4)
+
+#### Pré-condições
+
+- Apagar a chamada a `node skills/produtos/scripts/validate.mjs` do bloco MANDATORY de uma cópia temporária de `skills/produtos/SKILL.md`.
+
+#### Comando
+
+```bash
+node scripts/lint-skills.mjs <caminho_temporario>/SKILL.md
+```
+
+#### Resultado esperado
+
+- Exit code: `1`.
+- Saída cita regra `R4` (validate.mjs ausente para skill da categoria A).
+
+#### Observações
+
+```
+```
+
+### 13.5 — Linter ignora skills puladas (`tray-dev`, `visao-geral`)
+
+#### Pré-condições
+
+- Skills `tray-dev` e `visao-geral` estão em `SKIP_SKILLS` no linter.
+
+#### Comando
+
+```bash
+node scripts/lint-skills.mjs skills/tray-dev/SKILL.md
+node scripts/lint-skills.mjs skills/visao-geral/SKILL.md
+```
+
+#### Resultado esperado
+
+- Exit code: `0` em ambos os casos (mesmo que os blocos não estejam presentes).
+- Saída: `⏭️  ... (pulado: SKIP_SKILLS)` ou similar.
+
+#### Observações
+
+```
+```
+
+### 13.6 — Saída JSON é array válido
+
+#### Pré-condições
+
+- Repo na versão 1.5.0+ com todas as 34 skills com bloco MANDATORY.
+
+#### Comando
+
+```bash
+node scripts/lint-skills.mjs --json
+```
+
+#### Resultado esperado
+
+- Stdout é JSON válido (array). Em estado verde, `[]`.
+- Exit code: `0`.
+
+#### Observações
+
+```
+```
+
 ## Próximos passos (robustez futura)
 
 A v1 cobre o suficiente para validar as mudanças da branch `feat/skill-validation-and-disambiguation`. Para uma v2, eis cenários extras já mapeados — mantidos aqui para o time não esquecer:
