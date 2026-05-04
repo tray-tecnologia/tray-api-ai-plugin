@@ -45,6 +45,7 @@
   "scripts": {
     "smoke": "node scripts/smoke-test.js",
     "test": "node --test \"tests/**/*.test.mjs\"",
+    "lint:skills": "node scripts/lint-skills.mjs",
     "version:check": "node scripts/sync-version.js --check",
     "version:set": "node scripts/sync-version.js --set"
   },
