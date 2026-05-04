@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "tray": {
+      "command": "npx",
+      "args": ["-y", "--package=@tray-tecnologia/tray-api-plugin", "tray-mcp"],
+      "env": {
+        "OPT_OUT_INSTRUMENTATION": "false"
+      }
+    }
+  }
+}
