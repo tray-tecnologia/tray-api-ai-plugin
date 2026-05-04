@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Order",
+  "description": "Payload de criação de pedido via POST /orders. Doc: https://developers.tray.com.br/#api-de-pedidos",
+  "type": "object",
+  "properties": {
+    "customer_id": {
+      "type": "integer",
+      "description": "ID do cliente da loja (não confundir com CPF)."
+    },
+    "products": {
+      "type": "array",
+      "description": "Itens do pedido. Cada item tem product_id e quantity."
+    },
+    "shipping_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data prevista de envio no formato YYYY-MM-DD."
+    },
+    "shipping_method": {
+      "type": "string",
+      "description": "Nome da forma de envio (ex.: 'Correios PAC')."
+    },
+    "shipping_cost": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Valor do frete em reais."
+    },
+    "payment_method": {
+      "type": "string",
+      "description": "Slug do meio de pagamento (ex.: 'pix', 'boleto', 'credit_card')."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observações livres do pedido."
+    }
+  },
+  "required": ["customer_id", "products"],
+  "additionalProperties": false
+}
