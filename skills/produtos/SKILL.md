@@ -22,15 +22,27 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute `node skills/produtos/scripts/validate.mjs '<payload_json>'`
-   para confirmar a estrutura do payload que vai gerar. O validador checa
-   apenas **estrutura** (campos obrigatórios, tipos e campos desconhecidos),
-   nunca valores reais — então monte um payload sintético com placeholders
-   sempre que os valores vierem de variáveis de ambiente, da entrada do
-   usuário ou de outras chamadas. Exemplo:
-   `node skills/produtos/scripts/validate.mjs '{"Product":{"name":"<nome>","price":"<preço>"}}'`.
-   Corrija todos os erros antes de retornar o código ao usuário. Até 3
-   tentativas — se persistir, explique o problema ao usuário.
+5. Execute o validador local antes de gerar código que monta o payload:
+
+   ```
+   node skills/produtos/scripts/validate.mjs --schema=<produto.create|produto.update> '<payload_json>'
+   ```
+
+   Schemas disponíveis:
+   - `produto.create` — POST /products (require `name` e `price`).
+   - `produto.update` — PUT /products/:id (todos opcionais; PUT só com `price` é válido).
+
+   O validador checa estrutura (campos obrigatórios, tipos, formats EAN/NCM,
+   campos desconhecidos) — não valores reais. Exemplo:
+
+   ```
+   node skills/produtos/scripts/validate.mjs --schema=produto.create '{"Product":{"name":"<nome>","price":<preço>}}'
+   ```
+
+   Para output programático use `--json`. Exit codes: `0` válido · `1`
+   inválido · `2` erro de uso.
+
+   Corrija todos os erros antes de retornar o código. Até 3 tentativas.
 
 # API de Produtos — Tray
 
