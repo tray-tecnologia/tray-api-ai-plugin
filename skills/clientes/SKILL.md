@@ -22,15 +22,23 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute `node skills/clientes/scripts/validate.mjs '<payload_json>'`
-   para confirmar a estrutura do payload que vai gerar. O validador checa
-   apenas **estrutura** (campos obrigatórios, tipos e campos desconhecidos),
-   nunca valores reais — então monte um payload sintético com placeholders
-   sempre que os valores vierem de variáveis de ambiente, da entrada do
-   usuário ou de outras chamadas. Exemplo:
-   `node skills/clientes/scripts/validate.mjs '{"Customer":{"name":"<nome>","email":"<email>"}}'`.
-   Corrija todos os erros antes de retornar o código ao usuário. Até 3
-   tentativas — se persistir, explique o problema ao usuário.
+5. Execute o validador local antes de gerar código que monta o payload:
+
+   ```
+   node skills/clientes/scripts/validate.mjs --schema=<cliente.create|cliente.update> '<payload_json>'
+   ```
+
+   Schemas disponíveis:
+   - `cliente.create` — POST /customers (require `name` e `email`).
+   - `cliente.update` — PUT /customers/:id (todos opcionais).
+
+   Validação semântica BR aplicada via `format`:
+   - `cpf` (11 dígitos com DV correto)
+   - `cnpj` (14 dígitos com DV correto)
+   - `email` (RFC simplificada)
+   - `birth_date` (YYYY-MM-DD)
+
+   Para output programático use `--json`. Exit codes: `0`/`1`/`2`.
 
 # API de Clientes — Tray
 
