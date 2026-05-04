@@ -36,6 +36,9 @@ jobs:
       - name: Rodar testes (node --test)
         run: npm test
 
+      - name: Lint skills (bloco MANDATORY)
+        run: npm run lint:skills
+
       - name: Validar JSON, frontmatter e payloads das skills
         run: npm run smoke
 
