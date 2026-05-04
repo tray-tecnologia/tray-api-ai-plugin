@@ -8,6 +8,9 @@
  *   3. Campo `name` presente em todos os arquivos com frontmatter
  *   4. Sem rotas duplicadas dentro de referencia-api.md
  *   5. Skills referenciadas existem no disco
+ *   ...
+ *  13. tray-dev — search smoke (fixture mockada)
+ *  14. lint-skills — bloco MANDATORY em todos os SKILL.md
  *
  * Uso: node scripts/smoke-test.js
  */
@@ -573,6 +576,23 @@ try {
   else fail(`13.4 --topic=produtos falhou (exit=${r4.status})`);
 } finally {
   rmSync(tmpDir, { recursive: true, force: true });
+}
+
+// ─── 14. lint-skills em todos os SKILL.md ─────────────────────────────────────
+
+console.log('\n[14] lint-skills (bloco MANDATORY em todas as skills):');
+
+const lintSkillsResult = spawnSync('node', ['scripts/lint-skills.mjs'], {
+  cwd: ROOT,
+  encoding: 'utf-8',
+});
+
+if (lintSkillsResult.status === 0) {
+  ok('lint-skills passou em todas as skills');
+} else {
+  fail(
+    `lint-skills falhou (exit=${lintSkillsResult.status}):\n${lintSkillsResult.stdout}\n${lintSkillsResult.stderr}`
+  );
 }
 
 // ─── Resultado final ───────────────────────────────────────────────────────────
