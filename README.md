@@ -21,11 +21,11 @@ Funciona nativamente com **Claude Code**, **Cursor**, **OpenAI Codex**, **Google
 Adicione o plugin como dependência de desenvolvimento no seu repositório:
 
 ```bash
-npm install --save-dev github:tray-tecnologia/tray-api-claude-plugin
+npm install --save-dev github:tray-tecnologia/tray-api-ai-plugin
 # ou
-pnpm add -D github:tray-tecnologia/tray-api-claude-plugin
+pnpm add -D github:tray-tecnologia/tray-api-ai-plugin
 # ou
-bun add -d github:tray-tecnologia/tray-api-claude-plugin
+bun add -d github:tray-tecnologia/tray-api-ai-plugin
 ```
 
 O pacote será instalado em `node_modules/@tray-tecnologia/tray-api-plugin/` e pode
@@ -35,12 +35,12 @@ ser referenciado pelas ferramentas que suportam contexto por arquivos locais.
 
 ```bash
 # Via marketplace
-/plugin marketplace add tray-tecnologia/tray-api-claude-plugin
+/plugin marketplace add tray-tecnologia/tray-api-ai-plugin
 /plugin install tray-api@tray-plugins
 
 # Desenvolvimento local
-git clone https://github.com/tray-tecnologia/tray-api-claude-plugin.git
-claude --plugin-dir ./tray-api-claude-plugin
+git clone https://github.com/tray-tecnologia/tray-api-ai-plugin.git
+claude --plugin-dir ./tray-api-ai-plugin
 ```
 
 ### Cursor
@@ -54,7 +54,7 @@ cp node_modules/@tray-tecnologia/tray-api-plugin/.cursor/rules/tray-api.mdc .cur
 Opção 2: clone ou submódulo no projeto de integração. O arquivo `.cursor/rules/tray-api.mdc` é carregado automaticamente quando o Cursor abre o repositório.
 
 ```bash
-git submodule add https://github.com/tray-tecnologia/tray-api-claude-plugin.git .tray-plugin
+git submodule add https://github.com/tray-tecnologia/tray-api-ai-plugin.git .tray-plugin
 ```
 
 O Cursor passa a ter acesso a todos os skills via `@skills/` e aos agentes via `@agents/`.
@@ -70,7 +70,7 @@ cp node_modules/@tray-tecnologia/tray-api-plugin/AGENTS.md ./
 Opção 2: clone ou submódulo. O `AGENTS.md` na raiz é carregado automaticamente pelo Codex.
 
 ```bash
-git submodule add https://github.com/tray-tecnologia/tray-api-claude-plugin.git .tray-plugin
+git submodule add https://github.com/tray-tecnologia/tray-api-ai-plugin.git .tray-plugin
 ```
 
 ### Google Gemini CLI
@@ -84,7 +84,7 @@ cp node_modules/@tray-tecnologia/tray-api-plugin/GEMINI.md ./
 Opção 2: clone ou submódulo. O `GEMINI.md` na raiz é carregado automaticamente via sistema hierárquico de contexto.
 
 ```bash
-git submodule add https://github.com/tray-tecnologia/tray-api-claude-plugin.git .tray-plugin
+git submodule add https://github.com/tray-tecnologia/tray-api-ai-plugin.git .tray-plugin
 # Verificar contexto carregado:
 /memory show
 ```
@@ -160,7 +160,7 @@ Ativados automaticamente pelo `assistente-migracao`. Consulte [agents/AGENTES.md
 
 ```bash
 # 1. Adicione o marketplace
-❯ /plugin marketplace add tray-tecnologia/tray-api-claude-plugin
+❯ /plugin marketplace add tray-tecnologia/tray-api-ai-plugin
   ⎿  Successfully added marketplace: tray-plugins
 
 # 2. Instale o plugin
@@ -243,7 +243,7 @@ Ativados automaticamente pelo `assistente-migracao`. Consulte [agents/AGENTES.md
 
 ## Contribuindo
 
-Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-claude-plugin).
+Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-ai-plugin).
 
 ## Referências
 

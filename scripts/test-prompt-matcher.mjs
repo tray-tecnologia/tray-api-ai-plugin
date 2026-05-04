@@ -32,7 +32,7 @@ const CASES = [
 
   // Bloco 4 — NÃO devem casar
   { id: '4.1', shouldMatch: false, prompt: 'Crie um ícone em base64 para o meu app.' },
-  { id: '4.2', shouldMatch: false, prompt: 'Gere um ícone SVG simples para o projeto tray-api-claude-plugin.', borderline: true },
+  { id: '4.2', shouldMatch: false, prompt: 'Gere um ícone SVG simples para o projeto tray-api-ai-plugin.', borderline: true },
   { id: '4.3', shouldMatch: false, prompt: 'Tenho um componente React de bandeja (tray) de comida. Como estilizo o background com CSS?' },
   { id: '4.4', shouldMatch: false, prompt: 'Existe uma lib de UI chamada Tray para mobile? Tem alternativa em React Native?' },
 

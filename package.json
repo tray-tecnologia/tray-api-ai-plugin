@@ -7,10 +7,10 @@
   "homepage": "https://developers.tray.com.br",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tray-tecnologia/tray-api-claude-plugin.git"
+    "url": "https://github.com/tray-tecnologia/tray-api-ai-plugin.git"
   },
   "bugs": {
-    "url": "https://github.com/tray-tecnologia/tray-api-claude-plugin/issues"
+    "url": "https://github.com/tray-tecnologia/tray-api-ai-plugin/issues"
   },
   "keywords": [
     "tray",
