@@ -150,7 +150,7 @@ A IA deve:
 - [ ] **"Antes de responder" seguida:** os 4 passos (ou 5 com `validate.mjs`) refletidos no código
 - [ ] **Endpoints corretos:** `POST {api_address}/auth` (etapa 3) + `GET {api_address}/products?access_token=…`
 - [ ] **Sem credenciais hardcoded:** uso de `process.env.TRAY_*` ou equivalente
-- [ ] **`validate.mjs` executado:** `skills/autorizacao/scripts/validate.mjs` rodou no payload de `POST /auth`
+- [ ] **`validate.mjs --schema=<op>` executado:** com a flag explícita para o schema correto da operação
 - [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: contexto OAuth foi injetado
 - [ ] **Hook não interrompeu a operação:** resposta foi entregue normalmente
 
@@ -187,7 +187,7 @@ A IA deve:
 - [ ] **"Antes de responder" seguida:** payload tem `name` e `price`, sem credenciais literais
 - [ ] **Chave-envelope:** body envolto em `{"Product": {...}}`
 - [ ] **Endpoint correto:** `POST {api_address}/products?access_token=…`
-- [ ] **`validate.mjs` executado e aprovado:** saída `✅ Payload válido`
+- [ ] **`validate.mjs --schema=<op>` executado:** com a flag explícita para o schema correto da operação
 - [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: contexto OAuth foi injetado (gatilho `/products`)
 - [ ] **Hook não interrompeu:** resposta foi entregue normalmente
 
@@ -261,7 +261,7 @@ A IA deve:
 - [ ] **Chave-envelope:** body envolto em `{"Customer": {...}}`
 - [ ] **CPF normalizado:** 11 dígitos, sem pontuação
 - [ ] **Endpoint correto:** `POST {api_address}/customers?access_token=…`
-- [ ] **`validate.mjs` executado e aprovado**
+- [ ] **`validate.mjs --schema=<op>` executado:** com a flag explícita para o schema correto da operação
 - [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `/customers`
 - [ ] **Hook não interrompeu**
 
@@ -297,7 +297,7 @@ A IA deve:
 - [ ] **Skill selecionada:** `tray-webhooks`
 - [ ] **"Antes de responder" seguida**
 - [ ] **Listener correto:** parse de `x-www-form-urlencoded`, leitura de `seller_id`/`scope_id`/`scope_name`/`act`
-- [ ] **`validate.mjs` executado e aprovado em payload de exemplo**
+- [ ] **`validate.mjs --schema=<op>` executado:** com a flag explícita para o schema correto da operação
 - [ ] **Menção a ativação por ticket de suporte**
 - [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `api.*tray`
 - [ ] **Hook não interrompeu**
@@ -441,7 +441,7 @@ A IA deve:
 ```
 ## Bloco 3 — Validação de payload (`validate.mjs` + regras BR)
 
-> Mistura proposital: 3.1 e 3.3 testam o `validate.mjs` rejeitando campos `required` faltantes; 3.2 testa a regra BR de CPF (algoritmo de verificação) que vem do `AGENTS.md` — o `validate.mjs` de `clientes` não tem regex de CPF, apenas `maxLength: 14`.
+> Mistura proposital: 3.1 e 3.3 testam o `validate.mjs` rejeitando campos `required` faltantes; 3.2 testa CPF malformado rejeitado pelo schema `cliente.create` com `format: cpf` (1.3.0).
 
 ### 3.1 — Produto sem campo obrigatório
 
@@ -459,12 +459,17 @@ A IA deve:
 
 1. Usar `tray-produtos`.
 2. Tentar `validate.mjs` com `{"Product": {"price":"99.90"}}` — saída: `❌ Validação falhou — 1 erro: "name" é obrigatório mas está ausente.`
+
+> **Nota 1.3.0:** se a IA rodar com `--json`, a saída será JSON
+> estruturado (`{valid:false, errors:[{path:"/Product/name", keyword:"required"...}]}`).
+> Verificar Bloco 9.1.
+
 3. **Não** entregar código pronto. Em vez disso, alertar o usuário: "o nome é obrigatório; me passe um nome para eu cadastrar o produto" (ou colocar um placeholder evidente como `name: '<NOME OBRIGATÓRIO>'` e marcar para preenchimento).
 
 #### Checklist de verificação
 
 - [ ] **Skill selecionada:** `tray-produtos`
-- [ ] **`validate.mjs` executado:** sim
+- [ ] **`validate.mjs --schema=<op>` executado:** com a flag explícita para o schema correto da operação
 - [ ] **`validate.mjs` rejeitou:** sim, com mensagem sobre `name`
 - [ ] **IA corrigiu/alertou:** não entregou código que estouraria HTTP 400
 - [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*: gatilho `tray-api`
@@ -481,7 +486,10 @@ A IA deve:
 
 **Aplicável a:** Claude Code · Cursor · Codex
 **Bloco:** 3 — Validação de payload
-**O que valida:** a IA reconhece CPF inválido pela regra do `AGENTS.md` (11 dígitos + algoritmo de verificação) — o `validate.mjs` por si só **não** detecta isso.
+**O que valida:** Em 1.3.0 o schema `cliente.create` ganha `format: cpf` —
+o `validate.mjs` agora **rejeita** CPF malformado pelo schema, não apenas
+pelo `AGENTS.md`. Cenário renomeado para refletir comportamento alterado.
+ID `3.2` mantido (estável; nunca renumeramos cenários antigos).
 
 #### Prompt (copy-paste)
 
@@ -492,22 +500,26 @@ A IA deve:
 A IA deve:
 
 1. Usar `tray-clientes`.
-2. Reconhecer CPF malformado pela regra do `AGENTS.md` ("CPF: 11 dígitos, validar com algoritmo de verificação").
-3. **Não** enviar — alertar o usuário que `'111'` não é CPF válido e pedir um CPF correto.
-4. (Opcional) Rodar `validate.mjs` — vai aprovar (schema só checa `maxLength: 14`), o que reforça que a barreira veio do `AGENTS.md`, não do schema.
+2. Rodar `node skills/clientes/scripts/validate.mjs --schema=cliente.create '{"Customer":{"name":"Maria","email":"maria@x.com","cpf":"111"}}'`.
+3. Saída: `❌ Validação falhou — 1 erro: CPF inválido — algoritmo de verificação falhou. Use 11 dígitos numéricos com DV correto.`
+4. Não enviar à API. Pedir CPF correto ao usuário.
 
 #### Checklist de verificação
 
 - [ ] **Skill selecionada:** `tray-clientes`
-- [ ] **Regra BR do `AGENTS.md` aplicada:** IA reconheceu CPF inválido
-- [ ] **IA não enviou payload com CPF malformado**
-- [ ] **`validate.mjs` (se rodado) aprovou** — confirma que a barreira não veio do schema
+- [ ] **`validate.mjs --schema=cliente.create` executado**
+- [ ] **`validate.mjs` rejeitou pelo `format: cpf`** (mensagem menciona "CPF inválido" / "algoritmo de verificação")
+- [ ] **A IA não enviou à API** (regressão do comportamento anterior, em que `validate` aprovava o payload)
+- [ ] **A IA pediu CPF correto ao usuário**
 - [ ] **Hook `UserPromptSubmit` disparou** *(apenas CC / Cursor)*
 - [ ] **Hook não interrompeu**
 
 #### Observações
 
 ```
+Comportamento alterado em 1.3.0. Antes: validate aceitava ('111' tinha
+maxLength 14 e o algoritmo BR vinha do AGENTS.md). Depois: schema rejeita
+diretamente pelo `format: cpf`.
 ```
 
 ---
