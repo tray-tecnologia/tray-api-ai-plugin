@@ -221,53 +221,103 @@ try {
   fail(`Verificação de agentes — erro: ${e.message}`);
 }
 
-// ─── 6. validate.mjs — payload válido ─────────────────────────────────────────
+// ─── 6. validate.mjs com payload válido (multi-schema) ────────────────────────
 
-section('6. validate.mjs com payload válido');
+section('6. validate.mjs com payload válido (multi-schema)');
 
-const validPayloads = [
-  { skill: 'produtos', schema: 'produto.create', payload: '{"name":"Produto Teste","price":99.90}' },
-  { skill: 'pedidos', schema: 'pedido.create', payload: '{"customer_id":1,"products":[]}' },
-  { skill: 'autorizacao', schema: 'auth-request', payload: '{"consumer_key":"abc","consumer_secret":"xyz","code":"123"}' },
-  { skill: 'webhooks', payload: '{"seller_id":100,"scope_id":200,"scope_name":"order","act":"insert"}' },
-  { skill: 'clientes', schema: 'cliente.create', payload: '{"name":"João Silva","email":"joao@exemplo.com"}' },
-];
+const validateSkills = {
+  autorizacao: {
+    'auth-request': '{"AuthRequest":{"consumer_key":"k","consumer_secret":"s","code":"c"}}',
+    'auth-refresh': '{"AuthRefresh":{"consumer_key":"k","refresh_token":"rt"}}',
+  },
+  produtos: {
+    'produto.create': '{"Product":{"name":"X","price":1}}',
+    'produto.update': '{"Product":{"price":2}}',
+  },
+  pedidos: {
+    'pedido.create': '{"Order":{"customer_id":1,"products":[{"product_id":1,"quantity":1}]}}',
+    'pedido.update': '{"Order":{"status_id":5}}',
+  },
+  clientes: {
+    'cliente.create': '{"Customer":{"name":"A","email":"a@b.com"}}',
+    'cliente.update': '{"Customer":{"email":"novo@x.com"}}',
+  },
+  webhooks: {
+    'webhook.payload': '{"Webhook":{"seller_id":1,"scope_id":1,"scope_name":"order","act":"insert"}}',
+  },
+  variacoes: {
+    'variacao.create': '{"Variant":{"sku":"X","price":1}}',
+    'variacao.update': '{"Variant":{"price":2}}',
+  },
+  categorias: {
+    'categoria.create': '{"Category":{"name":"Masc"}}',
+    'categoria.update': '{"Category":{"name":"Y"}}',
+  },
+  marcas: {
+    'marca.create': '{"Brand":{"name":"Nike"}}',
+    'marca.update': '{"Brand":{"slug":"nike"}}',
+  },
+};
 
-for (const { skill, schema, payload } of validPayloads) {
-  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
-  const argv = [scriptPath];
-  if (schema) argv.push(`--schema=${schema}`);
-  argv.push(payload);
-  const result = spawnSync('node', argv, { encoding: 'utf-8' });
-  if (result.status === 0) {
-    ok(`skills/${skill}/scripts/validate.mjs — payload válido aceito`);
-  } else {
-    fail(`skills/${skill}/scripts/validate.mjs — falhou com payload válido: ${result.stderr?.trim()}`);
+for (const [skill, schemas] of Object.entries(validateSkills)) {
+  for (const [schemaName, validPayload] of Object.entries(schemas)) {
+    const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+    const result = spawnSync('node', [scriptPath, `--schema=${schemaName}`, validPayload], { encoding: 'utf-8' });
+    if (result.status === 0) {
+      ok(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — payload válido aceito`);
+    } else {
+      fail(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — falhou: ${result.stderr?.trim()}`);
+    }
   }
 }
 
-// ─── 7. validate.mjs — payload inválido ───────────────────────────────────────
+// ─── 7. validate.mjs com payload inválido (multi-schema) ──────────────────────
 
 section('7. validate.mjs com payload inválido (deve rejeitar)');
 
-const invalidPayloads = [
-  { skill: 'produtos', schema: 'produto.create', payload: '{"price":99.90}', expect: 'name ausente' },
-  { skill: 'pedidos', schema: 'pedido.create', payload: '{"products":[]}', expect: 'customer_id ausente' },
-  { skill: 'autorizacao', schema: 'auth-request', payload: '{"consumer_key":"abc"}', expect: 'consumer_secret e code ausentes' },
-  { skill: 'webhooks', payload: '{"seller_id":100}', expect: 'scope_id/scope_name/act ausentes' },
-  { skill: 'clientes', schema: 'cliente.create', payload: '{"cpf":"12345678901"}', expect: 'name e email ausentes' },
-];
+const invalidPayloads = {
+  autorizacao: {
+    'auth-request': ['{"AuthRequest":{"consumer_key":"k"}}', 'falta consumer_secret/code'],
+    'auth-refresh': ['{"AuthRefresh":{"consumer_key":"k"}}', 'falta refresh_token'],
+  },
+  produtos: {
+    'produto.create': ['{"Product":{"price":1}}', 'falta name'],
+    'produto.update': ['{"Product":{"price":"abc"}}', 'price string'],
+  },
+  pedidos: {
+    'pedido.create': ['{"Order":{"customer_id":1}}', 'falta products'],
+    'pedido.update': ['{"Order":{"status_id":"5"}}', 'status_id string'],
+  },
+  clientes: {
+    'cliente.create': ['{"Customer":{"name":"A"}}', 'falta email'],
+    'cliente.update': ['{"Customer":{"email":"sem-arroba"}}', 'email malformado'],
+  },
+  webhooks: {
+    'webhook.payload': ['{"Webhook":{"seller_id":1,"scope_id":1,"scope_name":"order"}}', 'falta act'],
+  },
+  variacoes: {
+    'variacao.create': ['{"Variant":{"sku":"X"}}', 'falta price'],
+    'variacao.update': ['{"Variant":{"price":-1}}', 'price negativo'],
+  },
+  categorias: {
+    'categoria.create': ['{"Category":{}}', 'falta name'],
+    'categoria.update': ['{"Category":{"parent_id":"1"}}', 'parent_id string'],
+  },
+  marcas: {
+    'marca.create': ['{"Brand":{}}', 'falta name'],
+    'marca.update': ['{"Brand":{"slug":"with space"}}', 'slug com espaço'],
+  },
+};
 
-for (const { skill, schema, payload, expect } of invalidPayloads) {
-  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
-  const argv = [scriptPath];
-  if (schema) argv.push(`--schema=${schema}`);
-  argv.push(payload);
-  const result = spawnSync('node', argv, { encoding: 'utf-8' });
-  if (result.status === 1) {
-    ok(`skills/${skill}/scripts/validate.mjs — rejeitou payload inválido (${expect})`);
-  } else {
-    fail(`skills/${skill}/scripts/validate.mjs — deveria rejeitar (${expect}) mas retornou exit ${result.status}`);
+for (const [skill, schemas] of Object.entries(invalidPayloads)) {
+  for (const [schemaName, [payload, expect]] of Object.entries(schemas)) {
+    const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+    const result = spawnSync('node', [scriptPath, `--schema=${schemaName}`, payload], { encoding: 'utf-8' });
+    if (result.status === 1) {
+      ok(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — rejeitou (${expect})`);
+    } else {
+      fail(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — deveria rejeitar (${expect}) mas exit=${result.status}`);
+    }
   }
 }
 
@@ -385,6 +435,17 @@ try {
   }
 } catch (e) {
   fail(`Verificação de contrato {ok, reason} — erro: ${e.message}`);
+}
+
+// ─── 12. lint-schemas em todos os schemas ─────────────────────────────────────
+
+section('12. lint-schemas em todos os schemas');
+
+const lintResult = spawnSync('node', [join(ROOT, 'scripts', 'lint-schemas.mjs')], { encoding: 'utf-8' });
+if (lintResult.status === 0) {
+  ok(`lint-schemas passou em todos os schemas`);
+} else {
+  fail(`lint-schemas falhou:\n${lintResult.stdout}\n${lintResult.stderr}`);
 }
 
 // ─── Resultado final ───────────────────────────────────────────────────────────
