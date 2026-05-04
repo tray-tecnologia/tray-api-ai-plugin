@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.4.0] - 2026-05-04
+
+### Added
+
+- Skill nova `tray-dev` com `scripts/search_docs.mjs` — busca lexical local (BM25 + sinônimos PT-BR) em `developers.tray.com.br`, com cache 24h em `~/.cache/tray-plugin/dev-docs/`.
+- CLI com 6 flags: `--topic=<slug>`, `--json`, `--limit=<n>`, `--no-cache`, `--refresh`, `--list-topics`, `--help`.
+- Output JSON Shopify-like com `results`, `score`, `topic`, `level`, `anchor`, `cache`, `took`.
+- Exit codes 0/1/2 (Unix-compliant: 0 ok mesmo com 0 resultados; 1 erro execução; 2 erro de uso).
+- Mapa canônico de 35 tópicos (slug → H1 da SPA) em `scripts/lib/topics-map.mjs`.
+- Dicionário inicial de 23 grupos de sinônimos PT-BR ↔ termos da API em `skills/tray-dev/assets/synonyms-pt-br.json`.
+- Telemetria opt-out via `OPT_OUT_INSTRUMENTATION=true`.
+- Cache de override via env: `TRAY_DOCS_CACHE_DIR`, `TRAY_DOCS_CACHE_TTL_MS`, `TRAY_DOCS_BASE_URL`.
+- Suite de testes nova em `tests/search/` (~62 testes, fetch mockado, sem rede em CI).
+- Novo Bloco 12 em `docs/CENARIOS-DE-TESTE.md` (search_docs CLI + offline).
+- Smoke test seção 13 (4 checks via fixture mockada).
+- Stemmer PT-BR simples em `scripts/lib/stemmer-pt-br.mjs`.
+- Splitter de markdown em `scripts/lib/markdown-splitter.mjs`.
+- Cache helper em `scripts/lib/docs-cache.mjs` (TTL, hash, fallback offline).
+- Indexer/searcher BM25 em `scripts/lib/search-index.mjs`.
+
+### Changed
+
+- `npm test` agora cobre `tests/**/*.test.mjs` (validate + search).
+- `README.md` ganha seção "Busca em docs com `search_docs.mjs`".
+- `CONTRIBUTING.md` ganha seção "Como expandir sinônimos do `search_docs.mjs`".
+- AGENTS.md, GEMINI.md, .cursor/rules, .aiassistant/rules, .github/copilot-instructions.md atualizados com bloco "Busca em docs".
+
+### Privacy
+
+- Header `X-Tray-AI-Telemetry: on` enviado por default ao buscar `developers.tray.com.br`. **Nenhuma query é enviada no header** — apenas indicação de origem do plugin. Opt-out documentado em README.
+
 ## [1.3.0] - 2026-05-04
 
 ### Adicionado
