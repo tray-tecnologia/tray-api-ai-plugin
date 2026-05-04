@@ -369,6 +369,42 @@ export OPT_OUT_INSTRUMENTATION=true
 
 A busca expande termos PT-BR para equivalentes da API (`autenticar` ↔ `oauth`, `criar` ↔ `POST`, etc.). O dicionário fica em `skills/tray-dev/assets/synonyms-pt-br.json`. Para expandir, abra um PR.
 
+## Mandatory Tool Calls em SKILL.md
+
+Toda skill de recurso da API Tray começa com um bloco `## MANDATORY: Tool Call(s) Required Before Answering` listando as ferramentas que o agente DEVE invocar antes de responder:
+
+- **Sempre** — `node skills/tray-dev/scripts/search_docs.mjs --topic=<slug> "<termo>"` para puxar a doc oficial mais recente.
+- **Quando aplicável** (8 skills com schema local) — `node skills/<recurso>/scripts/validate.mjs --schema=<nome>` para validar o payload antes de retornar código.
+
+As skills se dividem em três categorias:
+
+| Categoria | Quantas | Conteúdo do MANDATORY |
+|---|---|---|
+| **A — search + validate** | 8 (autorizacao, produtos, pedidos, clientes, webhooks, variacoes, categorias, marcas) | search_docs **e** validate.mjs |
+| **B — escrita sem validate** | 19 (cupons, multicd, pagamentos, etc.) | search_docs apenas |
+| **C — só leitura** | 7 (usuarios, frete, palavras-chave, etc.) | search_docs apenas |
+
+`tray-dev` e `visao-geral` são puladas (são skills meta).
+
+### Validação automática
+
+```bash
+npm run lint:skills
+```
+
+Verifica em cada `skills/*/SKILL.md` (exceto `tray-dev` e `visao-geral`):
+
+- presença do bloco MANDATORY;
+- posição (antes do `## Antes de responder`);
+- presença do comando de busca;
+- presença do `validate.mjs` (categoria A);
+- ausência de duplicata do step antigo no "Antes de responder";
+- frase imperativa "OBRIGATÓRIA(S)".
+
+Saída em `--json` para integração CI. Exit codes: `0` OK · `1` erro · `2` uso.
+
+O CI roda `npm run lint:skills` antes do smoke; o smoke também invoca o linter na seção 14.
+
 ## Contribuindo
 
 Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-claude-plugin).
