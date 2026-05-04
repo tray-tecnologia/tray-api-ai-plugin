@@ -12,7 +12,8 @@
  * Uso: node scripts/smoke-test.js
  */
 
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync, statSync, writeFileSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { spawnSync } from 'child_process';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
@@ -446,6 +447,132 @@ if (lintResult.status === 0) {
   ok(`lint-schemas passou em todos os schemas`);
 } else {
   fail(`lint-schemas falhou:\n${lintResult.stdout}\n${lintResult.stderr}`);
+}
+
+// ─── 13. tray-dev — search smoke (fixture mockada) ─────────────────────────────
+
+section('13. Search docs (tray-dev) — smoke');
+
+const tmpDir = mkdtempSync(join(tmpdir(), 'tray-search-smoke-'));
+try {
+  const fakeIdx = {
+    version: '1.0.0',
+    documents: [
+      {
+        id: 'gerar-chaves',
+        h1: 'Autorização',
+        title: 'Gerar Chaves de Acesso',
+        level: 'h2',
+        anchor: 'gerar-chaves',
+        body: 'Use OAuth 2.0 para autenticar',
+        code: [],
+        tokens: {
+          title: ['ger', 'chav', 'acess'],
+          code: [],
+          body: ['us', 'oauth', '2', '0', 'autentic'],
+        },
+        length: 8,
+      },
+      {
+        id: 'post-products',
+        h1: 'API de Produtos',
+        title: 'POST /products',
+        level: 'h2',
+        anchor: 'post-products',
+        body: 'Cria produto novo',
+        code: [],
+        tokens: {
+          title: ['post', 'product'],
+          code: [],
+          body: ['cri', 'produt', 'nov'],
+        },
+        length: 5,
+      },
+    ],
+    docFreq: {
+      ger: 1,
+      chav: 1,
+      acess: 1,
+      us: 1,
+      oauth: 1,
+      '2': 1,
+      '0': 1,
+      autentic: 1,
+      post: 1,
+      product: 1,
+      cri: 1,
+      produt: 1,
+      nov: 1,
+    },
+    avgdl: 6.5,
+    N: 2,
+  };
+  writeFileSync(join(tmpDir, 'raw.html'), '# Autorização\n\n## Gerar Chaves de Acesso\nUse OAuth 2.0\n', 'utf8');
+  writeFileSync(join(tmpDir, 'parsed.md'), '', 'utf8');
+  writeFileSync(join(tmpDir, 'index.json'), JSON.stringify(fakeIdx), 'utf8');
+  writeFileSync(
+    join(tmpDir, 'metadata.json'),
+    JSON.stringify({
+      fetchedAt: new Date().toISOString(),
+      ttlMs: 86400000,
+      sourceHash: 'sha256:smoke',
+      indexVersion: '1.0.0',
+    }),
+    'utf8'
+  );
+
+  const env = { ...process.env, TRAY_DOCS_CACHE_DIR: tmpDir };
+  const SCRIPT = join(ROOT, 'skills', 'tray-dev', 'scripts', 'search_docs.mjs');
+
+  const r1 = spawnSync('node', [SCRIPT, '--list-topics'], { env, encoding: 'utf8', cwd: ROOT });
+  if (r1.status === 0 && r1.stdout.includes('produtos')) ok('13.1 --list-topics ok');
+  else fail(`13.1 --list-topics falhou (exit=${r1.status})`);
+
+  const r2 = spawnSync('node', [SCRIPT, '--json', 'oauth'], { env, encoding: 'utf8', cwd: ROOT });
+  let d2;
+  try {
+    d2 = JSON.parse(r2.stdout);
+  } catch {
+    d2 = null;
+  }
+  if (r2.status === 0 && d2 && d2.results.length >= 1) ok('13.2 query "oauth" retorna >=1 resultado');
+  else fail(`13.2 query oauth falhou (exit=${r2.status})`);
+
+  const r3 = spawnSync('node', [SCRIPT, '--json', 'palavraqueeunaoexiste9999'], {
+    env,
+    encoding: 'utf8',
+    cwd: ROOT,
+  });
+  let d3;
+  try {
+    d3 = JSON.parse(r3.stdout);
+  } catch {
+    d3 = null;
+  }
+  if (r3.status === 0 && d3 && d3.results.length === 0)
+    ok('13.3 query inexistente retorna 0 (exit 0)');
+  else fail(`13.3 query inexistente falhou (exit=${r3.status})`);
+
+  const r4 = spawnSync('node', [SCRIPT, '--topic=produtos', '--json', 'post'], {
+    env,
+    encoding: 'utf8',
+    cwd: ROOT,
+  });
+  let d4;
+  try {
+    d4 = JSON.parse(r4.stdout);
+  } catch {
+    d4 = null;
+  }
+  if (
+    r4.status === 0 &&
+    d4 &&
+    (d4.results.length === 0 || d4.results.every((r) => r.topic === 'produtos'))
+  )
+    ok('13.4 --topic=produtos filtra corretamente');
+  else fail(`13.4 --topic=produtos falhou (exit=${r4.status})`);
+} finally {
+  rmSync(tmpDir, { recursive: true, force: true });
 }
 
 // ─── Resultado final ───────────────────────────────────────────────────────────
