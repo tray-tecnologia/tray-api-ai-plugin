@@ -24,13 +24,26 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute `node skills/autorizacao/scripts/validate.mjs '<payload_json>'`
-   para confirmar a estrutura do payload que vai gerar. O validador checa
-   apenas **estrutura** (campos obrigatórios, tipos e campos desconhecidos),
-   nunca valores reais — então monte um payload sintético com placeholders
-   sempre que os valores vierem de variáveis de ambiente, do callback OAuth
-   ou de outras chamadas. Exemplo:
-   `node skills/autorizacao/scripts/validate.mjs '{"consumer_key":"<env>","consumer_secret":"<env>","code":"<callback>"}'`.
+5. Execute o validador local antes de gerar código que monta o payload:
+
+   ```
+   node skills/autorizacao/scripts/validate.mjs --schema=<auth-request|auth-refresh> '<payload_json>'
+   ```
+
+   Schemas disponíveis (consulte com `--list-schemas`):
+   - `auth-request` — POST /auth (etapa 3 OAuth, troca de code por token).
+   - `auth-refresh` — GET /auth (renovação via refresh_token).
+
+   O validador checa apenas **estrutura** (campos obrigatórios, tipos e
+   campos desconhecidos) — nunca valores reais. Para placeholders use:
+
+   ```
+   node skills/autorizacao/scripts/validate.mjs --schema=auth-request '{"consumer_key":"<env>","consumer_secret":"<env>","code":"<callback>"}'
+   ```
+
+   Para output programático (parseável), use `--json`. Exit codes:
+   `0` válido · `1` inválido · `2` erro de uso.
+
    Corrija todos os erros antes de retornar o código ao usuário. Até 3
    tentativas — se persistir, explique o problema ao usuário.
 
