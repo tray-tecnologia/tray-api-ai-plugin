@@ -266,8 +266,8 @@ O dicionário em `skills/tray-dev/assets/synonyms-pt-br.json` mapeia termos PT-B
 
    ```bash
    npm test
-   npm run lint:skills    # bloco MANDATORY
-   npm run lint:schemas   # apenas Categoria A
+   npm run lint:skills                # bloco MANDATORY
+   node scripts/lint-schemas.mjs      # subset JSON Schema (categoria A)
    npm run smoke
    ```
 
