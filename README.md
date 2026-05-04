@@ -1,12 +1,12 @@
 # Plugin Tray API para ferramentas de IA
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude%20Code-Plugin-blueviolet)](https://code.claude.com/docs/pt/plugins)
 [![API Tray](https://img.shields.io/badge/API-Tray%20E--commerce-orange)](https://developers.tray.com.br)
 
 Plugin completo para integração com as APIs da Tray. Acelera o desenvolvimento de aplicativos e-commerce por parceiros e comunidade na plataforma Tray, fornecendo documentação detalhada de **150+ endpoints**, fluxos de autenticação OAuth, webhooks e boas práticas de integração.
 
-Plugin licenciado sob GPL-3.0. Antes de abrir issue de segurança, leia [`SECURITY.md`](SECURITY.md). Para contribuir, leia [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Plugin licenciado sob MIT. Antes de abrir issue de segurança, leia [`SECURITY.md`](SECURITY.md). Para contribuir, leia [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 Funciona nativamente com **Claude Code**, **Cursor**, **OpenAI Codex**, **Google Gemini CLI**, **GitHub Copilot**, **JetBrains AI Assistant** e **Windsurf**.
 
@@ -253,4 +253,4 @@ Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [Git
 
 ## Licença
 
-GNU General Public License v3.0 — veja [LICENSE](LICENSE) para detalhes.
+MIT License — veja [LICENSE](LICENSE) para detalhes.

@@ -13,7 +13,7 @@
   },
   "homepage": "https://developers.tray.com.br",
   "repository": "https://github.com/tray-tecnologia/tray-api-claude-plugin",
-  "license": "GPL-3.0",
+  "license": "MIT",
   "categories": [
     "e-commerce",
     "api-integration",

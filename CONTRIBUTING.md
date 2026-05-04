@@ -163,4 +163,4 @@ estão alinhados.
 ## Licença
 
 Ao contribuir você concorda em licenciar sua contribuição sob a
-[GPL-3.0](LICENSE), mesma licença do projeto.
+[MIT License](LICENSE), mesma licença do projeto.
