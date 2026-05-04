@@ -21,6 +21,7 @@
 - [Bloco 7 — `PostToolUse` (Write/Edit/Bash)](#bloco-7--posttooluse-writeeditbash)
 - [Bloco 8 — Smoke test ferramentas secundárias](#bloco-8--smoke-test-ferramentas-secundárias)
 - [Bloco 9 — `validate.mjs` v2 (CLI e output)](#bloco-9--validatemjs-v2-cli-e-output)
+- [Bloco 10 — Formats BR detectados pelo schema](#bloco-10--formats-br-detectados-pelo-schema)
 - [Próximos passos (robustez futura)](#próximos-passos-robustez-futura)
 
 ## Como usar este documento
@@ -1453,6 +1454,184 @@ A IA deve:
 
 - [ ] **Exit 2** (não 1)
 - [ ] **Mensagem identifica JSON malformado**
+
+#### Observações
+
+```
+```
+
+## Bloco 10 — Formats BR detectados pelo schema
+
+> Aplicável a Claude Code · Cursor · Codex. Testa que dados brasileiros
+> mal-formados (CPF/CNPJ com DV errado, EAN com DV errado, NCM com 7 dígitos,
+> data DD/MM/YYYY) são rejeitados pelo `validate.mjs` v2 — não apenas pela
+> regra do `AGENTS.md`. Comportamento alterado em 1.3.0: o schema agora
+> contém `format: cpf`/`cnpj`/`ean`/`ncm`/`date`.
+
+### 10.1 — CPF inválido detectado pelo schema
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 10 — formats BR
+**O que valida:** `validate.mjs --schema=cliente.create` rejeita CPF `'111'` pelo `format: cpf` (não só pelo AGENTS.md).
+
+#### Prompt (copy-paste)
+
+> Cadastra um cliente na Tray: nome 'Maria', email 'maria@x.com', CPF '111'. Use o validate antes.
+
+#### Resultado esperado
+
+1. A IA usa `tray-clientes`.
+2. Roda `validate.mjs --schema=cliente.create '{"Customer":{"name":"Maria","email":"maria@x.com","cpf":"111"}}'`.
+3. Exit `1`. Mensagem inclui `CPF inválido`.
+4. A IA explica que CPF precisa de 11 dígitos com DV correto e pede CPF válido ao usuário (sem enviar à API).
+
+#### Checklist
+
+- [ ] **Skill correta:** `tray-clientes`
+- [ ] **`validate.mjs --schema=cliente.create` foi executado**
+- [ ] **Exit 1, mensagem com `CPF inválido`**
+- [ ] **A IA não chamou a API** com o payload rejeitado
+
+#### Observações
+
+```
+```
+
+---
+
+### 10.2 — CNPJ todos zeros rejeitado
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 10
+**O que valida:** CNPJ `'00000000000000'` (mesmo "tendo 14 dígitos") falha no algoritmo de DV.
+
+#### Prompt (copy-paste)
+
+> Roda: `node skills/clientes/scripts/validate.mjs --schema=cliente.create '{"Customer":{"name":"ACME","email":"a@b.com","cnpj":"00000000000000"}}'`. Mostre o resultado.
+
+#### Resultado esperado
+
+1. Exit `1`.
+2. Mensagem `CNPJ inválido — algoritmo de verificação falhou`.
+
+#### Checklist
+
+- [ ] **Exit 1**
+- [ ] **Mensagem menciona algoritmo de verificação**
+
+#### Observações
+
+```
+```
+
+---
+
+### 10.3 — CEP < 8 dígitos rejeitado
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 10
+**O que valida:** schema com `format: cep` rejeita CEP curto. *Nota: este cenário valida o format `cep` mesmo quando aplicado a um schema custom de teste; nas skills atuais só `cliente.update` poderia receber CEP indiretamente. Use o validador da lib direto.*
+
+#### Prompt (copy-paste)
+
+> Rode: `node -e "import('./scripts/lib/validate-schema.mjs').then(({validatePayload}) => console.log(validatePayload({type:'object', properties:{cep:{type:'string',format:'cep'}}}, {cep:'1234'})))"`. Mostre.
+
+#### Resultado esperado
+
+1. `stdout` contém um array com 1 erro mencionando "CEP inválido".
+
+#### Checklist
+
+- [ ] **1 erro retornado**
+- [ ] **Mensagem menciona "CEP inválido"**
+
+#### Observações
+
+```
+```
+
+---
+
+### 10.4 — EAN com DV errado rejeitado
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 10
+**O que valida:** EAN `'7891000100100'` (DV correto seria `103`) é rejeitado pelo `format: ean`.
+
+#### Prompt (copy-paste)
+
+> Cadastra um produto na Tray: nome 'Leite Moça falso', preço 5.99, EAN '7891000100100'. Use o validate.
+
+#### Resultado esperado
+
+1. A IA usa `tray-produtos`.
+2. Roda `validate.mjs --schema=produto.create` com o EAN.
+3. Exit `1`. Mensagem `EAN/GTIN inválido — DV incorreto`.
+4. A IA pede EAN correto (não chuta).
+
+#### Checklist
+
+- [ ] **Skill correta:** `tray-produtos`
+- [ ] **Exit 1, mensagem sobre DV do EAN**
+- [ ] **A IA não chamou a API**
+
+#### Observações
+
+```
+```
+
+---
+
+### 10.5 — NCM com 7 dígitos rejeitado
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 10
+**O que valida:** NCM tem que ter 8 dígitos numéricos.
+
+#### Prompt (copy-paste)
+
+> Roda: `node skills/produtos/scripts/validate.mjs --schema=produto.create '{"Product":{"name":"X","price":1,"ncm":"6109100"}}'`. Mostre.
+
+#### Resultado esperado
+
+1. Exit `1`.
+2. Mensagem `NCM inválido — use 8 dígitos numéricos`.
+
+#### Checklist
+
+- [ ] **Exit 1**
+- [ ] **Mensagem menciona 8 dígitos**
+
+#### Observações
+
+```
+```
+
+---
+
+### 10.6 — Data DD/MM/YYYY rejeitada
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 10
+**O que valida:** `format: date` aceita só `YYYY-MM-DD`.
+
+#### Prompt (copy-paste)
+
+> Crie um pedido na Tray para o cliente 1, produto 1 quantidade 1, com `shipping_date` "15/04/2026". Use o validate.
+
+#### Resultado esperado
+
+1. A IA usa `tray-pedidos`.
+2. Roda `validate.mjs --schema=pedido.create` com a data BR.
+3. Exit `1`. Mensagem `Data inválida — use YYYY-MM-DD`.
+4. A IA corrige para `'2026-04-15'` e revalida.
+
+#### Checklist
+
+- [ ] **Skill correta:** `tray-pedidos`
+- [ ] **Exit 1 inicial, mensagem sobre YYYY-MM-DD**
+- [ ] **A IA corrigiu a data antes de re-rodar**
+- [ ] **Re-validação aprovou** após correção
 
 #### Observações
 
