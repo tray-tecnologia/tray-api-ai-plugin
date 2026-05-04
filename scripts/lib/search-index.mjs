@@ -1,4 +1,6 @@
 import { stem } from './stemmer-pt-br.mjs';
+import { splitMarkdown } from './markdown-splitter.mjs';
+import { writeCache, readCache, isFresh, hashContent } from './docs-cache.mjs';
 
 const STOPWORDS = new Set([
   'a','o','de','do','da','dos','das','e','é','em','na','no','nas','nos',
@@ -150,5 +152,75 @@ export function search(index, queryRaw, { synonyms = null, topicH1 = null, limit
     results: top,
     totalResults: scored.length,
     took: Date.now() - t0
+  };
+}
+
+async function fetchSpa(baseUrl) {
+  const headers = {
+    'User-Agent': `tray-ai-toolkit/1.4.0 (${process.platform})`,
+    'X-Tray-AI-Source': 'plugin'
+  };
+  if (process.env.OPT_OUT_INSTRUMENTATION !== 'true') {
+    headers['X-Tray-AI-Telemetry'] = 'on';
+  }
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(baseUrl, { headers, signal: ctrl.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+export async function loadOrFetch({ cacheDir, ttlMs, baseUrl, forceRefresh = false }) {
+  const existing = await readCache(cacheDir);
+  if (!forceRefresh && existing && isFresh(existing.metadata)) {
+    return {
+      index: existing.index,
+      cache: {
+        hit: true,
+        ageMs: Date.now() - new Date(existing.metadata.fetchedAt).getTime(),
+        ttlMs: existing.metadata.ttlMs
+      }
+    };
+  }
+  let raw;
+  try {
+    raw = await fetchSpa(baseUrl);
+  } catch (e) {
+    if (existing) {
+      return {
+        index: existing.index,
+        cache: {
+          hit: true,
+          stale: true,
+          ageMs: Date.now() - new Date(existing.metadata.fetchedAt).getTime(),
+          ttlMs: existing.metadata.ttlMs,
+          warning: 'Doc desatualizada — rede indisponível'
+        }
+      };
+    }
+    const err = new Error('OFFLINE_NO_CACHE: rede indisponível e sem cache local');
+    err.code = 'OFFLINE_NO_CACHE';
+    throw err;
+  }
+  const sourceHash = hashContent(raw);
+  if (existing && existing.metadata.sourceHash === sourceHash) {
+    await writeCache(cacheDir, { raw, parsed: existing.parsed, index: existing.index }, ttlMs);
+    return {
+      index: existing.index,
+      cache: { hit: false, refreshed: true, sameContent: true }
+    };
+  }
+  const docs = splitMarkdown(raw);
+  const index = buildIndex(docs);
+  await writeCache(cacheDir, { raw, parsed: raw, index }, ttlMs);
+  return {
+    index,
+    cache: existing
+      ? { hit: false, refreshed: true }
+      : { hit: false, initial: true }
   };
 }
