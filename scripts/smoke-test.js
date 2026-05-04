@@ -226,16 +226,19 @@ try {
 section('6. validate.mjs com payload válido');
 
 const validPayloads = [
-  { skill: 'produtos',    payload: '{"name":"Produto Teste","price":"99.90"}' },
-  { skill: 'pedidos',     payload: '{"client_id":1,"products":[]}' },
-  { skill: 'autorizacao', payload: '{"consumer_key":"abc","consumer_secret":"xyz","code":"123"}' },
-  { skill: 'webhooks',    payload: '{"seller_id":100,"scope_id":200,"scope_name":"order","act":"insert"}' },
-  { skill: 'clientes',    payload: '{"name":"João Silva","email":"joao@exemplo.com"}' },
+  { skill: 'produtos', schema: 'produto.create', payload: '{"name":"Produto Teste","price":99.90}' },
+  { skill: 'pedidos', schema: 'pedido.create', payload: '{"customer_id":1,"products":[]}' },
+  { skill: 'autorizacao', schema: 'auth-request', payload: '{"consumer_key":"abc","consumer_secret":"xyz","code":"123"}' },
+  { skill: 'webhooks', payload: '{"seller_id":100,"scope_id":200,"scope_name":"order","act":"insert"}' },
+  { skill: 'clientes', schema: 'cliente.create', payload: '{"name":"João Silva","email":"joao@exemplo.com"}' },
 ];
 
-for (const { skill, payload } of validPayloads) {
+for (const { skill, schema, payload } of validPayloads) {
   const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
-  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
+  const argv = [scriptPath];
+  if (schema) argv.push(`--schema=${schema}`);
+  argv.push(payload);
+  const result = spawnSync('node', argv, { encoding: 'utf-8' });
   if (result.status === 0) {
     ok(`skills/${skill}/scripts/validate.mjs — payload válido aceito`);
   } else {
@@ -248,16 +251,19 @@ for (const { skill, payload } of validPayloads) {
 section('7. validate.mjs com payload inválido (deve rejeitar)');
 
 const invalidPayloads = [
-  { skill: 'produtos',    payload: '{"price":"99.90"}',              expect: 'name ausente' },
-  { skill: 'pedidos',     payload: '{"products":[]}',                expect: 'client_id ausente' },
-  { skill: 'autorizacao', payload: '{"consumer_key":"abc"}',         expect: 'consumer_secret e code ausentes' },
-  { skill: 'webhooks',    payload: '{"seller_id":100}',              expect: 'scope_id/scope_name/act ausentes' },
-  { skill: 'clientes',    payload: '{"cpf":"12345678901"}',          expect: 'name e email ausentes' },
+  { skill: 'produtos', schema: 'produto.create', payload: '{"price":99.90}', expect: 'name ausente' },
+  { skill: 'pedidos', schema: 'pedido.create', payload: '{"products":[]}', expect: 'customer_id ausente' },
+  { skill: 'autorizacao', schema: 'auth-request', payload: '{"consumer_key":"abc"}', expect: 'consumer_secret e code ausentes' },
+  { skill: 'webhooks', payload: '{"seller_id":100}', expect: 'scope_id/scope_name/act ausentes' },
+  { skill: 'clientes', schema: 'cliente.create', payload: '{"cpf":"12345678901"}', expect: 'name e email ausentes' },
 ];
 
-for (const { skill, payload, expect } of invalidPayloads) {
+for (const { skill, schema, payload, expect } of invalidPayloads) {
   const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
-  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
+  const argv = [scriptPath];
+  if (schema) argv.push(`--schema=${schema}`);
+  argv.push(payload);
+  const result = spawnSync('node', argv, { encoding: 'utf-8' });
   if (result.status === 1) {
     ok(`skills/${skill}/scripts/validate.mjs — rejeitou payload inválido (${expect})`);
   } else {

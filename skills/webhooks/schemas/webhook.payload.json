@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Webhook",
+  "description": "Payload recebido pelo listener de webhook da Tray (application/x-www-form-urlencoded). Doc: https://developers.tray.com.br/#sistema-de-notificacao",
+  "type": "object",
+  "properties": {
+    "seller_id": {
+      "type": "integer",
+      "description": "ID da loja que emitiu o evento."
+    },
+    "scope_id": {
+      "type": "integer",
+      "description": "ID do recurso afetado (produto/pedido/cliente conforme scope_name)."
+    },
+    "scope_name": {
+      "type": "string",
+      "enum": ["product", "order", "customer", "variant", "order_status", "order_payment", "order_invoice"],
+      "description": "Nome do recurso que sofreu a alteração."
+    },
+    "act": {
+      "type": "string",
+      "enum": ["insert", "update", "delete"],
+      "description": "Ação realizada sobre o recurso."
+    }
+  },
+  "required": ["seller_id", "scope_id", "scope_name", "act"],
+  "additionalProperties": false
+}
