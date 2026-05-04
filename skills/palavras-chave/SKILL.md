@@ -11,6 +11,24 @@ when_not_to_use: >
   somente leitura para consultar keywords configuradas na loja.
 ---
 
+## MANDATORY: Tool Call Required Before Answering
+
+> **Esta chamada é OBRIGATÓRIA, não opcional.** Execute-a antes de gerar
+> qualquer código de consulta. Se você está respondendo sem ter chamado a
+> ferramenta abaixo, **pare e chame agora**.
+
+### Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=palavras-chave "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+> **Nota:** este recurso é só de leitura (apenas endpoints GET) — não há payload
+> para validar. Foque em parâmetros de query e paginação.
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:
