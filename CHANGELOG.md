@@ -1,5 +1,76 @@
 # Changelog
 
+## [1.3.0] - 2026-05-04
+
+### Adicionado
+
+- `validate.mjs` v2 com saída JSON estruturada (`--json`), entrada via stdin,
+  seleção explícita de schema (`--schema=`), listagem (`--list-schemas`),
+  exit codes 0/1/2 distintos e flag `--help`.
+- `scripts/lib/formats-br.mjs` com 9 formats: `cpf`, `cnpj`, `cep`, `ean`,
+  `ncm`, `date`, `datetime`, `email`, `uri`. Algoritmos de DV implementados
+  para CPF, CNPJ e GTIN (EAN). Aplicados via `format: <nome>` nos schemas.
+- Schemas multi-operação em `skills/<skill>/schemas/<recurso>.<op>.json`
+  para 8 skills: `autorizacao` (auth-request, auth-refresh), `produtos`
+  (produto.create, produto.update), `pedidos` (pedido.create, pedido.update),
+  `clientes` (cliente.create, cliente.update), `webhooks` (webhook.payload),
+  `variacoes` (variacao.create, variacao.update), `categorias`
+  (categoria.create, categoria.update), `marcas` (marca.create, marca.update)
+  — total: 15 schemas.
+- 3 skills novas com `validate.mjs`: `variacoes`, `categorias`, `marcas`.
+- Suite de testes em `tests/validate/` com `node --test` nativo (≥ 200
+  casos cobrindo válidos, inválidos e oracle AJV em features comuns).
+- `scripts/lint-schemas.mjs` rejeita schemas que usam keywords fora do
+  subset documentado. Integrado ao `npm run smoke` (seção 12).
+- `scripts/lib/SUBSET.md` documenta o subset JSON Schema suportado em
+  runtime (`required`, `type`, `enum`, `maxLength`, `minimum`, `pattern`,
+  `format`, `additionalProperties: false`).
+- `tests/validate/helpers/ajv-oracle.mjs` — wrapper AJV usado nos testes
+  como oracle de conformidade Draft-07 nas features comuns.
+- `tests/validate/helpers/fixtures.mjs` com CPFs, CNPJs, EANs e NCMs
+  canônicos válidos e inválidos compartilhados entre testes.
+- Script `npm test` em `package.json` rodando `node --test tests/validate/`.
+- `package-lock.json` na raiz.
+
+### Alterado
+
+- `scripts/lib/validate-schema.mjs` v2 — refatorado para suportar `format`,
+  `pattern`, múltiplos schemas, output JSON e seleção explícita de operação.
+  Erros agora carregam `path` e `keyword` (formato Shopify-like).
+- 5 skills migradas (`autorizacao`, `produtos`, `pedidos`, `clientes`,
+  `webhooks`) — `assets/schema.json` removido, substituído por `schemas/`.
+  Passo 5 do "Antes de responder" agora inclui `--schema=<op>`.
+- `package.json` ganha `devDependencies: ajv ^8.17.1, ajv-formats ^3.0.1`,
+  campo `engines.node: ">=20"` e script `npm test`.
+- `.github/workflows/ci.yml` agora roda `npm ci && npm test` antes de
+  `npm run smoke` em matrix Node 20/22.
+- `scripts/smoke-test.js` — seções 6 e 7 reescritas para iterar pelos
+  schemas multi-operação (1 caso válido + 1 inválido por schema). Nova
+  seção 12 executa `lint-schemas.mjs` em todos os schemas das 8 skills.
+- Cenário 3.2 do `docs/CENARIOS-DE-TESTE.md` reescrito: comportamento
+  alterado em 1.3.0 — schema agora rejeita CPF malformado pelo `format: cpf`,
+  não apenas pelo `AGENTS.md`. ID `3.2` mantido (estável).
+- `README.md` ganha seção "Validação local com `validate.mjs`" detalhando
+  contrato CLI completo.
+- `CONTRIBUTING.md` reescreve seção de criação de skill para multi-operação;
+  adiciona seção "Como criar um schema novo" com checklist passo a passo.
+- `AGENTS.md`, `GEMINI.md`, `.aiassistant/rules/tray-api.md`,
+  `.cursor/rules/tray-api.mdc` e `.github/copilot-instructions.md` ganham
+  bloco "Validação local" com 8 skills, lista de formats BR e exit codes.
+
+### Removido
+
+- `assets/schema.json` em todas as 5 skills migradas (substituído por
+  `schemas/<recurso>.<op>.json`).
+
+### Quebra retroativa
+
+- Skills com múltiplas operações exigem agora `--schema=<op>` ao invocar
+  `validate.mjs`. Os próprios `SKILL.md` já trazem o exemplo correto;
+  automações externas que chamam o CLI direto sem flag precisam atualizar.
+
+---
+
 ## [1.2.0] - 2026-04-29
 
 ### Adicionado
