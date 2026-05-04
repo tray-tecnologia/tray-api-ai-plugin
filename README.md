@@ -241,6 +241,59 @@ Ativados automaticamente pelo `assistente-migracao`. Consulte [agents/AGENTES.md
 # Valida se sua integração está pronta para homologação
 ```
 
+## Validação local com `validate.mjs`
+
+8 das 35 skills do plugin (`autorizacao`, `produtos`, `pedidos`, `clientes`,
+`webhooks`, `variacoes`, `categorias`, `marcas`) têm um script
+`scripts/validate.mjs` para validar payloads contra o schema oficial **antes**
+de chamar a API Tray.
+
+### Uso básico
+
+```
+node skills/<skill>/scripts/validate.mjs --schema=<op> '<payload_json>'
+```
+
+Exemplo:
+
+```
+node skills/produtos/scripts/validate.mjs --schema=produto.create \
+  '{"Product":{"name":"Camiseta","price":49.90}}'
+```
+
+### Flags
+
+- `--schema=<nome>` — obrigatório quando a skill tem múltiplos schemas; opcional se há só 1.
+- `--json` — saída programática (formato Shopify-like) em vez de PT-BR humano.
+- `--list-schemas` — lista os schemas disponíveis na skill e sai com 0.
+- `--help` — imprime uso.
+
+### Exit codes
+
+| Code | Significado |
+|---|---|
+| 0 | Payload válido |
+| 1 | Payload inválido (campos faltando, tipo errado, format BR errado, etc.) |
+| 2 | Erro de uso (schema inexistente, JSON malformado, `--schema` faltando quando há múltiplos) |
+
+### Stdin
+
+Aceita pipe sem flag adicional:
+
+```
+echo '{"Product":{"name":"X","price":1}}' | \
+  node skills/produtos/scripts/validate.mjs --schema=produto.create
+```
+
+### Subset JSON Schema suportado
+
+O validador é zero-deps em runtime e implementa um subset de JSON Schema
+Draft-07. Detalhes em [`scripts/lib/SUBSET.md`](scripts/lib/SUBSET.md).
+
+Formats brasileiros (CPF/CNPJ/CEP/EAN/NCM com algoritmos de DV; date e
+datetime no formato Tray) são implementados em
+[`scripts/lib/formats-br.mjs`](scripts/lib/formats-br.mjs).
+
 ## Contribuindo
 
 Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-claude-plugin).
