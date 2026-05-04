@@ -44,7 +44,15 @@
   ],
   "scripts": {
     "smoke": "node scripts/smoke-test.js",
+    "test": "node --test \"tests/validate/**/*.test.mjs\"",
     "version:check": "node scripts/sync-version.js --check",
     "version:set": "node scripts/sync-version.js"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
