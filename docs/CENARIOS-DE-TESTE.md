@@ -23,6 +23,7 @@
 - [Bloco 9 — `validate.mjs` v2 (CLI e output)](#bloco-9--validatemjs-v2-cli-e-output)
 - [Bloco 10 — Formats BR detectados pelo schema](#bloco-10--formats-br-detectados-pelo-schema)
 - [Bloco 11 — Skills novas com `validate.mjs`](#bloco-11--skills-novas-com-validatemjs)
+- [Bloco 12 — `search_docs.mjs` (tray-dev)](#bloco-12--search_docsmjs-tray-dev)
 - [Próximos passos (robustez futura)](#próximos-passos-robustez-futura)
 
 ## Como usar este documento
@@ -1742,6 +1743,180 @@ A IA deve:
 - [ ] **Primeira validação falhou (pattern)**
 - [ ] **A IA corrigiu o slug** (lowercase + hífen)
 - [ ] **Segunda validação aprovou**
+
+#### Observações
+
+```
+```
+
+## Bloco 12 — `search_docs.mjs` (tray-dev)
+
+> Aplicável a Claude Code · Cursor · Codex. Testa a CLI da skill `tray-dev`,
+> introduzida na 1.4.0: busca lexical local (BM25 + sinônimos PT-BR) sobre
+> `developers.tray.com.br` com cache 24h. Inclui degradação graciosa offline.
+
+### 12.1 — `--list-topics` lista 35 tópicos
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 12 — search_docs
+**O que valida:** `--list-topics` retorna lista canônica e sai com 0.
+
+#### Prompt (copy-paste)
+
+> Rode: `node skills/tray-dev/scripts/search_docs.mjs --list-topics`. Mostre quantos tópicos retornou e cite 5 deles.
+
+#### Resultado esperado
+
+1. Exit 0.
+2. Stdout lista ≥ 30 tópicos (ex.: `produtos`, `pedidos`, `autorizacao`, `webhooks`, `clientes`).
+
+#### Checklist
+
+- [ ] **Exit 0**
+- [ ] **Lista ≥ 30 tópicos**
+- [ ] **Inclui `produtos`, `pedidos`, `autorizacao`**
+
+#### Observações
+
+```
+```
+
+---
+
+### 12.2 — Busca conceitual "como autenticar"
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 12
+**O que valida:** Sinônimos expandem PT-BR ("autenticar") para termos da API ("oauth", "token") e o resultado top-1 é a seção de Autorização.
+
+#### Prompt (copy-paste)
+
+> Como faço a autenticação inicial na API Tray? Use `search_docs.mjs` antes de responder.
+
+#### Resultado esperado
+
+1. A IA roda `node skills/tray-dev/scripts/search_docs.mjs "como autenticar"` (ou equivalente).
+2. Top-1 é da seção `Autorização` (`topic: autorizacao` no JSON).
+3. A IA cita o link âncora retornado e usa o conteúdo como fonte primária.
+
+#### Checklist
+
+- [ ] **`search_docs.mjs` executado**
+- [ ] **Top-1 do tópico `autorizacao`**
+- [ ] **A IA citou link âncora retornado**
+
+#### Observações
+
+```
+```
+
+---
+
+### 12.3 — Output `--json` estruturado
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 12
+**O que valida:** `--json` retorna `{query, expandedQuery, results, totalResults, took, cache}`.
+
+#### Prompt (copy-paste)
+
+> Rode: `node skills/tray-dev/scripts/search_docs.mjs --json "POST products"`. Mostre a saída e explique cada campo.
+
+#### Resultado esperado
+
+1. Exit 0.
+2. Stdout é JSON parseável com `query`, `expandedQuery` (array), `results`, `totalResults`, `took` (number ms), `cache` ({hit, ageMs?}).
+3. `results[0]` tem `title`, `url`, `snippet`, `score`, `topic`, `h1`, `level`, `anchor`.
+
+#### Checklist
+
+- [ ] **Exit 0**
+- [ ] **JSON parseável**
+- [ ] **Campos `expandedQuery`, `results`, `took`, `cache` presentes**
+- [ ] **`results[0].url` começa com `https://developers.tray.com.br/#`**
+
+#### Observações
+
+```
+```
+
+---
+
+### 12.4 — Filtro `--topic=pedidos`
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 12
+**O que valida:** Filtro restringe ao H1 mapeado.
+
+#### Prompt (copy-paste)
+
+> Rode: `node skills/tray-dev/scripts/search_docs.mjs --topic=pedidos --json "cancelamento"`. Mostre.
+
+#### Resultado esperado
+
+1. Exit 0.
+2. Cada `results[i].topic` é exatamente `"pedidos"` (ou `results` vazio).
+
+#### Checklist
+
+- [ ] **Exit 0**
+- [ ] **Todo `results[i].topic === 'pedidos'`** (se houver resultados)
+
+#### Observações
+
+```
+```
+
+---
+
+### 12.5 — Query sem hits — exit 0
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 12
+**O que valida:** 0 resultados não é erro (diferença vs `validate.mjs`); exit 0.
+
+#### Prompt (copy-paste)
+
+> Rode: `node skills/tray-dev/scripts/search_docs.mjs --json "xyzpalavraqueeunaoexiste"`. Mostre.
+
+#### Resultado esperado
+
+1. Exit `0` (não 1).
+2. `results` é array vazio.
+3. Mensagem humana sugere outros termos ou `--topic`.
+
+#### Checklist
+
+- [ ] **Exit 0** (não 1)
+- [ ] **`results: []`**
+
+#### Observações
+
+```
+```
+
+---
+
+### 12.6 — Topic inexistente — exit 2
+
+**Aplicável a:** Claude Code · Cursor · Codex
+**Bloco:** 12
+**O que valida:** Slug fora do mapa retorna exit 2 com mensagem útil.
+
+#### Prompt (copy-paste)
+
+> Rode: `node skills/tray-dev/scripts/search_docs.mjs --topic=inexistente "x"`. Mostre o erro.
+
+#### Resultado esperado
+
+1. Exit `2`.
+2. Stderr inclui `topic` e sugere `--list-topics`.
+
+#### Checklist
+
+- [ ] **Exit 2**
+- [ ] **Stderr menciona `topic`**
+- [ ] **Stderr sugere `--list-topics`**
 
 #### Observações
 
