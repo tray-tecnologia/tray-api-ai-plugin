@@ -35,6 +35,17 @@ Documentação oficial: https://developers.tray.com.br
 - CPF (11 dígitos) e CNPJ (14 dígitos) — validar antes de enviar.
 - CEP: 8 dígitos numéricos.
 
+### Validação local
+
+- 8 skills têm `scripts/validate.mjs`: `autorizacao`, `produtos`, `pedidos`,
+  `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`.
+- Skills com múltiplos schemas exigem `--schema=<op>`. Use `--list-schemas`
+  para descobrir os disponíveis.
+- Output humano por default; `--json` para programático. Exit codes:
+  `0` válido · `1` inválido · `2` erro de uso.
+- Formats BR custom: `cpf`, `cnpj`, `cep`, `ean`, `ncm`, `date`, `datetime`,
+  `email`, `uri`. Detalhes em `scripts/lib/SUBSET.md`.
+
 ---
 
 ## Documentação por recurso
