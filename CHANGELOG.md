@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.5.0] - 2026-05-04
+
+### Added
+
+- Bloco `## MANDATORY: Tool Call(s) Required Before Answering` em todas as 34 skills de recursos da API:
+  - 8 skills da categoria A (`autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`) com `search_docs.mjs` **e** `validate.mjs`.
+  - 19 skills da categoria B (escrita sem `validate.mjs`: `cupons`, `multicd`, `pagamentos`, `notas-fiscais`, `status-pedido`, `kits`, `caracteristicas`, `carrinho-compras`, `listas-preco-b2b`, `parceiros`, `newsletter`, `imagens-produtos`, `informacoes-adicionais`, `etiquetas-hub`, `emissores-etiqueta`, `enderecos-cliente`, `perfis-cliente`, `configuracao-frete`, `scripts-externos`) com `search_docs.mjs`.
+  - 7 skills da categoria C (somente leitura: `usuarios`, `produtos-vendidos`, `palavras-chave`, `listagem-carrinho`, `informacoes-loja`, `frete`, `etiquetas-mercado-livre`) com `search_docs.mjs`.
+- `scripts/lint-skills.mjs` — linter de conformidade do bloco MANDATORY com 6 regras (presença, posição, comando search, comando validate, ausência de duplicata, frase imperativa). Suporta `--json`, `--help` e arquivo único; exit codes Unix (0/1/2).
+- Suite `tests/lint-skills/` com 9 fixtures + 10 testes cobrindo as 6 regras + skip de `tray-dev`/`visao-geral` + `findSkillFiles`.
+- Script `npm run lint:skills`.
+- Smoke test seção 14 chama `lint:skills` (101 checks no total).
+- Step `Lint skills (bloco MANDATORY)` no CI (`.github/workflows/ci.yml`), antes do smoke.
+- Seção "Mandatory Tool Calls em SKILL.md" no `README.md`.
+- Seção "Como adicionar uma skill nova" no `CONTRIBUTING.md` com 3 templates (A/B/C).
+- Bloco 13 em `docs/CENARIOS-DE-TESTE.md` (6 cenários do `lint-skills`).
+
+### Changed
+
+- As 8 skills da categoria A tiveram o "step 5" (`validate.mjs`) movido do `## Antes de responder` para o novo bloco `## MANDATORY: Tool Calls Required Before Answering`, eliminando duplicação.
+- `AGENTS.md`, `GEMINI.md`, `.cursor/rules/tray-api.mdc`, `.aiassistant/rules/tray-api.md` e `.github/copilot-instructions.md` referenciam o novo padrão e o linter `npm run lint:skills`.
+- `AGENTS.md` ganhou entrada na tabela "Comandos disponíveis" para `lint:skills`.
+
 ## [1.4.0] - 2026-05-04
 
 ### Added
