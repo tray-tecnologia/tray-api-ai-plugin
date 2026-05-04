@@ -240,3 +240,49 @@ O dicionário em `skills/tray-dev/assets/synonyms-pt-br.json` mapeia termos PT-B
 - Sinônimos triviais já resolvidos pelo stemmer (`produto` ↔ `produtos`).
 - Termos com 1 caractere (ruído).
 - Tradução literal sem benefício na API Tray (ex.: `the` ↔ `o`).
+
+## Como adicionar uma skill nova
+
+1. **Crie a pasta** `skills/<resource>/` com `SKILL.md` (frontmatter obrigatório: `name`, `description`, `when_to_use`, `when_not_to_use`).
+
+2. **Adicione o bloco `## MANDATORY: Tool Call(s) Required Before Answering`** logo após o `---` de fechamento do frontmatter, antes de qualquer outra seção. Use um dos 3 templates conforme o tipo de skill:
+
+   - **Categoria A — recurso de escrita COM `validate.mjs`** (ex.: `produtos`, `pedidos`): bloco contém `search_docs.mjs` E `validate.mjs`. Veja `skills/produtos/SKILL.md`.
+   - **Categoria B — recurso de escrita SEM `validate.mjs`** (ex.: `cupons`, `multicd`): bloco contém apenas `search_docs.mjs`. Veja `skills/cupons/SKILL.md`.
+   - **Categoria C — recurso de leitura** (apenas GET; ex.: `usuarios`, `frete`): bloco contém apenas `search_docs.mjs`, com nota explicando que não há payload. Veja `skills/usuarios/SKILL.md`.
+
+   O bloco DEVE conter a frase `OBRIGATÓRIAS` (ou `OBRIGATÓRIA` no singular) e o literal `node skills/tray-dev/scripts/search_docs.mjs`.
+
+3. **Atualize o `topics-map.mjs`** se houver um novo `<TOPIC_SLUG>` (caminho: `scripts/lib/topics-map.mjs`).
+
+4. **Para Categoria A:** crie também:
+   - `skills/<resource>/scripts/validate.mjs` (espelhe outra skill A);
+   - `skills/<resource>/schemas/<resource>.<operation>.json` (subset documentado em `scripts/lib/SUBSET.md`);
+   - testes em `tests/validate/skills/<resource>/`.
+
+   Veja a seção "Validação local com `validate.mjs`" deste documento.
+
+5. **Verifique localmente:**
+
+   ```bash
+   npm test
+   npm run lint:skills    # bloco MANDATORY
+   npm run lint:schemas   # apenas Categoria A
+   npm run smoke
+   ```
+
+   Todos devem passar. O CI roda os mesmos checks.
+
+6. **Atualize cross-refs:**
+   - `AGENTS.md` (tabela de skills)
+   - `GEMINI.md`, `.cursor/rules/tray-api.mdc`, `.aiassistant/rules/tray-api.md`, `.github/copilot-instructions.md`
+   - `README.md` (se for skill destacada)
+   - `docs/CENARIOS-DE-TESTE.md` (cenários de teste manual)
+
+7. **Bump de versão MINOR** (`x.Y.0`) com:
+
+   ```bash
+   npm run version:set -- <next>
+   ```
+
+   Atualize `CHANGELOG.md` com a entrada da nova versão.
