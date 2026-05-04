@@ -207,3 +207,36 @@ estão alinhados.
 
 Ao contribuir você concorda em licenciar sua contribuição sob a
 [GPL-3.0](LICENSE), mesma licença do projeto.
+
+## Como expandir sinônimos do `search_docs.mjs`
+
+O dicionário em `skills/tray-dev/assets/synonyms-pt-br.json` mapeia termos PT-BR para equivalentes da API Tray. Quando uma query PT-BR óbvia retorna 0 resultados, é sinal de gap no dicionário.
+
+### Quando adicionar/expandir um grupo
+
+- Termo recorrente em pergunta de usuário PT-BR que não bate com vocabulário da SPA inglesa.
+- Sinônimo regional (ex.: "preço" vs "preco" vs "valor").
+- Termo técnico Tray específico (ex.: "consumer key" para "client id").
+
+### Como adicionar
+
+1. Identifique o `primary` canônico — preferencialmente o termo da API Tray (em inglês ou exatamente como aparece na SPA).
+2. Adicione array `synonyms` com variações PT-BR (sem acentos, lowercase).
+3. Adicione um teste em `tests/search/synonyms.test.mjs` cobrindo o novo grupo.
+4. Rode `npm test` localmente.
+5. Bump da `version` no JSON (`1.0.0` → `1.0.1`).
+
+### Exemplo
+
+```json
+{
+  "primary": "tax",
+  "synonyms": ["imposto","icms","ipi","tributo","taxacao"]
+}
+```
+
+### Não adicionar
+
+- Sinônimos triviais já resolvidos pelo stemmer (`produto` ↔ `produtos`).
+- Termos com 1 caractere (ruído).
+- Tradução literal sem benefício na API Tray (ex.: `the` ↔ `o`).
