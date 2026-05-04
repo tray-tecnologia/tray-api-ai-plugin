@@ -139,6 +139,32 @@ export function validatePayload(schema, payload) {
         });
       }
     }
+
+    if (def.pattern !== undefined && typeof value === 'string') {
+      const re = new RegExp(def.pattern);
+      if (!re.test(value)) {
+        errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'pattern',
+          message: `"${field}" não casa com o pattern ${JSON.stringify(def.pattern)} (valor: ${JSON.stringify(value)}).`,
+          hint: `→ Ajuste "${field}" para satisfazer o regex ${def.pattern}`,
+        });
+      }
+    }
+
+    if (def.format !== undefined) {
+      const validator = FORMATS[def.format];
+      if (validator && !validator(value)) {
+        const friendly = FORMAT_MESSAGES[def.format] ?? `"${field}" não satisfaz o format ${def.format}.`;
+        errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'format',
+          message: friendly.replace('{field}', field).replace('{value}', JSON.stringify(value)),
+          hint: `→ Corrija "${field}" conforme o format ${def.format} (ver scripts/lib/SUBSET.md)`,
+        });
+      }
+      // format desconhecido: silent (lint-schemas garante que não chegue aqui)
+    }
   }
 
   // additionalProperties: false
