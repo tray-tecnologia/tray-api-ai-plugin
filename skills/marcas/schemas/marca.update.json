@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Brand",
+  "description": "Payload de atualização parcial de marca via PUT /brands/:id.",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "maxLength": 255 },
+    "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "description": { "type": "string" },
+    "active": { "type": "integer", "enum": [0, 1] }
+  },
+  "additionalProperties": false
+}
