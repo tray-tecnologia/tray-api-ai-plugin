@@ -595,6 +595,84 @@ if (lintSkillsResult.status === 0) {
   );
 }
 
+// ─── 15. MCP server smoke (stdio com 3 requests JSON-RPC) ─────────────────────
+
+console.log('\n[15] MCP server smoke (stdio):');
+
+try {
+  const initReq = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: {
+      protocolVersion: '2024-11-05',
+      capabilities: {},
+      clientInfo: { name: 'smoke', version: '1.0' },
+    },
+  };
+  const initNotif = { jsonrpc: '2.0', method: 'notifications/initialized' };
+  const listReq = { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} };
+  const callReq = {
+    jsonrpc: '2.0',
+    id: 3,
+    method: 'tools/call',
+    params: {
+      name: 'tray.validate',
+      arguments: { schema: 'inexistente', payload: {} },
+    },
+  };
+  const stdin = [
+    JSON.stringify(initReq),
+    JSON.stringify(initNotif),
+    JSON.stringify(listReq),
+    JSON.stringify(callReq),
+    '',
+  ].join('\n');
+
+  const child = spawnSync('node', ['mcp/server.mjs'], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+    timeout: 8000,
+    input: stdin,
+  });
+
+  const responses = child.stdout
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  if (responses.length >= 3) {
+    ok(`15.1 server stdio respondeu ${responses.length} mensagens JSON-RPC`);
+  } else {
+    fail(
+      `15.1 server respondeu apenas ${responses.length} mensagens; stdout: ${child.stdout.slice(0, 200)}; stderr: ${child.stderr.slice(0, 200)}`
+    );
+  }
+
+  const listResp = responses.find((r) => r.id === 2);
+  if (listResp?.result?.tools?.length === 2) {
+    ok('15.2 ListTools retorna exatamente 2 tools');
+  } else {
+    fail(`15.2 ListTools não retornou 2 tools: ${JSON.stringify(listResp)}`);
+  }
+
+  const callResp = responses.find((r) => r.id === 3);
+  if (callResp?.result?.isError === true) {
+    ok('15.3 CallTool com schema inválido retorna isError:true');
+  } else {
+    fail(`15.3 CallTool não retornou isError: ${JSON.stringify(callResp)}`);
+  }
+} catch (e) {
+  fail(`15 erro inesperado: ${e.message}`);
+}
+
 // ─── Resultado final ───────────────────────────────────────────────────────────
 
 console.log('\n' + '─'.repeat(50));
