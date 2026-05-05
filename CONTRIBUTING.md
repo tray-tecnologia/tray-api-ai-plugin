@@ -286,3 +286,24 @@ O dicionário em `skills/tray-dev/assets/synonyms-pt-br.json` mapeia termos PT-B
    ```
 
    Atualize `CHANGELOG.md` com a entrada da nova versão.
+
+## Como evoluir o servidor MCP
+
+O servidor MCP está em `mcp/` (JS puro, sem TS, sem build). Reusa as libs em `scripts/lib/` para search e validate.
+
+Estrutura:
+
+- `mcp/server.mjs` — entrada (stdio).
+- `mcp/tools/<tool>.mjs` — uma função por tool exposta.
+- `mcp/lib/` — helpers locais (carregamento de schemas, etc).
+- `tests/mcp/` — suite de testes (in-process, sem rede).
+
+Regra invariante: **nunca** `console.log` em arquivos de `mcp/`. Stdout é o canal MCP. Use `console.error` para logs.
+
+Para adicionar uma tool nova:
+
+1. Criar `mcp/tools/<nome>.mjs` com `export const xxxToolDefinition` e `export async function handleXxx(input, ...)`.
+2. Importar em `mcp/server.mjs` e registrar no `ListTools` + roteador `CallTool`.
+3. Criar testes em `tests/mcp/tools-<nome>.test.mjs`.
+4. Documentar em `mcp/README.md`.
+5. Ajustar smoke seção 15 se for tool com side-effect novo.

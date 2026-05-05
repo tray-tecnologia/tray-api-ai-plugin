@@ -405,6 +405,27 @@ Saída em `--json` para integração CI. Exit codes: `0` OK · `1` erro · `2` u
 
 O CI roda `npm run lint:skills` antes do smoke; o smoke também invoca o linter na seção 14.
 
+## Servidor MCP (`mcp/`)
+
+O plugin Tray também expõe ferramentas via **Model Context Protocol (MCP)** para clientes que não suportam o formato de plugin nativo (Continue.dev, Zed, agents customizados, backends).
+
+### Tools
+
+- `tray.search_docs` — busca BM25 em `developers.tray.com.br` (mesma engine do P1.2).
+- `tray.validate` — valida payload contra schemas das skills (mesma engine do P1.1).
+
+### Uso rápido
+
+```bash
+# Local (já dentro do repo):
+npm run mcp
+
+# Via npx (após instalar o plugin):
+npx --package=@tray-tecnologia/tray-api-plugin tray-mcp
+```
+
+Configuração para Claude Desktop, Cursor, Continue.dev e clientes genéricos está em [`mcp/README.md`](mcp/README.md). O [`.mcp.json`](.mcp.json) do root serve como template.
+
 ## Contribuindo
 
 Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-claude-plugin).
