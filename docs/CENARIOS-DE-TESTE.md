@@ -2060,6 +2060,98 @@ node scripts/lint-skills.mjs --json
 ```
 ```
 
+## Bloco 14 — Servidor MCP (P1.3)
+
+Cobre o servidor MCP introduzido em 1.6.0. Estes cenários são MANUAIS — exigem um cliente MCP real conectado.
+
+### 14.1 — Boot stand-alone via `node mcp/server.mjs`
+
+#### Pré-condições
+- Repo na versão 1.6.0+ com `npm install` executado.
+
+#### Comando
+```bash
+node mcp/server.mjs
+```
+
+#### Resultado esperado
+- stderr imprime `tray-mcp-server v1.6.0 listo (stdio).`.
+- stdout permanece em silêncio (0 bytes).
+- Processo aguarda input (não termina sozinho).
+
+#### Observações
+
+```
+```
+
+### 14.2 — Conectar via Claude Desktop
+
+#### Pré-condições
+- Adicionar entrada em `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) ou `%APPDATA%\Claude\claude_desktop_config.json` (Windows) conforme `mcp/README.md`.
+- Reiniciar Claude Desktop.
+
+#### Procedimento
+- Abrir Claude. Verificar que aparece `tray` como ferramenta MCP conectada nas configurações.
+- Pedir ao Claude: "use tray.search_docs para procurar como autenticar via OAuth".
+
+#### Resultado esperado
+- Claude invoca a tool. Resultado JSON com 1+ resultado de busca.
+- URL aponta para `https://developers.tray.com.br/#...`.
+
+#### Observações
+
+```
+```
+
+### 14.3 — Validar payload via Cursor
+
+#### Pré-condições
+- `.cursor/mcp.json` configurado conforme `mcp/README.md`.
+
+#### Procedimento
+- Pedir: `use tray.validate com schema=produto.create e payload={"Product":{"name":"Camisa","price":99}}`.
+
+#### Resultado esperado
+- Tool retorna `valid: true` (ambos campos obrigatórios atendidos).
+- Resposta NÃO marca `isError: true`.
+
+#### Observações
+
+```
+```
+
+### 14.4 — Erro `SCHEMA_NOT_FOUND`
+
+#### Procedimento
+- Em qualquer cliente MCP conectado, invocar `tray.validate` com `schema: "inexistente"`.
+
+#### Resultado esperado
+- Resposta marcada `isError: true`.
+- Texto JSON inclui `error: 'SCHEMA_NOT_FOUND'` e `available: [...]` (lista ordenada com 15 schemas, incluindo `produto.create`).
+
+#### Observações
+
+```
+```
+
+### 14.5 — Modo offline
+
+#### Pré-condições
+- Limpar cache de docs: `rm -rf ~/.cache/tray-plugin/dev-docs/`.
+- Desconectar internet (ou bloquear `developers.tray.com.br` no `/etc/hosts`).
+
+#### Procedimento
+- Em cliente MCP conectado, invocar `tray.search_docs` com qualquer query (ex.: `"oauth"`).
+
+#### Resultado esperado
+- `isError: true` com `body.error === 'OFFLINE_NO_CACHE'`.
+- `tray.validate` continua funcionando normalmente (não usa rede; usa schemas locais do plugin).
+
+#### Observações
+
+```
+```
+
 ## Próximos passos (robustez futura)
 
 A v1 cobre o suficiente para validar as mudanças da branch `feat/skill-validation-and-disambiguation`. Para uma v2, eis cenários extras já mapeados — mantidos aqui para o time não esquecer:
