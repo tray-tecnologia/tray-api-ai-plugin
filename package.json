@@ -1,6 +1,6 @@
 {
   "name": "@tray-tecnologia/tray-api-plugin",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "Plugin de documentação da API Tray para agentes de IA.",
   "type": "module",
   "license": "GPL-3.0",
