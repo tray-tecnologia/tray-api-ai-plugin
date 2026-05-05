@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.6.0] - 2026-05-05
+
+### Adicionado
+
+- Servidor MCP em `mcp/` (JS puro, ESM) compatível com qualquer cliente MCP (Claude Desktop, Cursor, Continue.dev, Zed, agents customizados, backends).
+- 2 tools MCP: `tray.search_docs` (BM25 em developers.tray.com.br, reusa P1.2) e `tray.validate` (validação estrutural com schemas locais, reusa P1.1).
+- Entrada `bin: {tray-mcp}` em `package.json` — após `npm install -g`, comando `tray-mcp` fica disponível globalmente; via `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp` sem instalar.
+- Script `npm run mcp` para boot local (stdio).
+- `.mcp.json` no root como template canônico para configuração de clientes MCP.
+- `mcp/README.md` (212 linhas) com setup detalhado para Claude Desktop, Cursor, Continue.dev e clientes genéricos.
+- `mcp/lib/load-schemas.mjs` — descobre schemas em `skills/<recurso>/schemas/*.json` em runtime (8 testes).
+- `mcp/tools/validate.mjs` — handler MCP que reusa `validatePayload` com input Zod (8 testes).
+- `mcp/tools/search-docs.mjs` — handler MCP que reusa `search`/`loadOrFetch` com índice memoizado (8 testes).
+- `mcp/server.mjs` — entrypoint stdio com `createServer()` exportado para testes (boot < 200ms, stdout silencioso).
+- Suite `tests/mcp/` com 30 testes (load-schemas, tools-validate, tools-search-docs, server in-process via `InMemoryTransport`).
+- Smoke test seção 15 (3 checks via JSON-RPC stdio: ListTools, CallTool inválido, total).
+- Bloco 14 em `docs/CENARIOS-DE-TESTE.md` (5 cenários manuais para clientes MCP — boot stand-alone, Claude Desktop, Cursor, schema not found, modo offline).
+
+### Mudado
+
+- `package.json` ganha bloco `dependencies` (`@modelcontextprotocol/sdk@^1.29.0`, `zod@^3.23.0`) — primeiras dependências de runtime do projeto.
+- `files` em `package.json` inclui `"mcp/**"` e `".mcp.json"` para distribuição via npm.
+- README.md ganha seção `## Servidor MCP (mcp/)` com uso rápido e link para `mcp/README.md`.
+- CONTRIBUTING.md ganha seção `## Como evoluir o servidor MCP` com guia para adicionar tools.
+- AGENTS.md, GEMINI.md, `.cursor/rules/tray-api.mdc`, `.aiassistant/rules/tray-api.md` e `.github/copilot-instructions.md` referenciam o servidor MCP.
+- AGENTS.md ganhou entrada na tabela "Comandos disponíveis" para `npm run mcp`.
+
+### Notas
+
+- `console.log` é proibido em qualquer arquivo de `mcp/` (quebraria o protocolo MCP via stdio). Apenas `console.error` permitido.
+- Total: 356 testes (350 → 356 após Task 6 in-process); 104 smoke checks (101 → 104 após seção 15).
+
 ## [1.5.0] - 2026-05-04
 
 ### Added

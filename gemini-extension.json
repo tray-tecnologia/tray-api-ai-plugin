@@ -1,6 +1,6 @@
 {
   "name": "tray-api",
   "description": "Plugin de documentação da API Tray para integrações e-commerce.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "contextFileName": "GEMINI.md"
 }
