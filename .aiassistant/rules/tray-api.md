@@ -58,6 +58,10 @@ node skills/tray-dev/scripts/search_docs.mjs --json "<termo>"
 - Tópicos: `--list-topics` para a lista canônica
 - Privacidade: `OPT_OUT_INSTRUMENTATION=true` desativa telemetria
 
+### Servidor MCP
+
+- Servidor em `mcp/`: `npm run mcp` ou `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp`. Tools `tray.search_docs` e `tray.validate`; configuração em `mcp/README.md`.
+
 ---
 
 ## Skills por recurso

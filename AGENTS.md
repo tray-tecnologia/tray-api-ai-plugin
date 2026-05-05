@@ -72,6 +72,10 @@ node skills/tray-dev/scripts/search_docs.mjs --json "<termo>"
 - Tópicos: `--list-topics` para a lista canônica
 - Privacidade: `OPT_OUT_INSTRUMENTATION=true` desativa telemetria
 
+### Servidor MCP
+
+- Servidor MCP em `mcp/`. Boot: `npm run mcp` ou `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp`. Expõe `tray.search_docs` e `tray.validate`. Configuração de clientes em `mcp/README.md`.
+
 ---
 
 ## Skills disponíveis
@@ -168,4 +172,5 @@ Para tarefas complexas, use o agente apropriado em `agents/`:
 | Setup | `commands/setup.md` | Guia de configuração inicial passo a passo |
 | Referência da API | `commands/referencia-api.md` | Índice de todos os endpoints |
 | Validar integração | `commands/validar-integracao.md` | Checklist antes de publicar na Tray |
+| Servidor MCP | `npm run mcp` | Inicia o servidor MCP (stdio) com tools `tray.search_docs` e `tray.validate` |
 | Lint de skills | `scripts/lint-skills.mjs` | Executar via `npm run lint:skills`: verifica que cada SKILL.md tem o bloco MANDATORY no formato correto |

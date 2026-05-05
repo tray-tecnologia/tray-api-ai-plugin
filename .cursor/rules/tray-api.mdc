@@ -111,3 +111,7 @@ correspondente no chat:
 | Ciclo de pedidos, NF-e, etiquetas | `agents/gestor-pedidos.md` |
 | Diagnóstico de erros e debugging | `agents/debug-integracao.md` |
 | Migração de Shopify/WooCommerce/etc. | `agents/assistente-migracao.md` |
+
+### Servidor MCP
+
+- Código em `mcp/`. Boot: `npm run mcp` ou `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp`. Tools: `tray.search_docs` e `tray.validate`. Clientes: `mcp/README.md`.
