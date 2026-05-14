@@ -12,9 +12,9 @@ Use uma das opções privadas abaixo, em ordem de preferência:
 
 1. **GitHub Private Vulnerability Reporting** (recomendado): aba
    `Security → Report a vulnerability` no repositório
-   [`tray-tecnologia/tray-api-claude-plugin`](https://github.com/tray-tecnologia/tray-api-claude-plugin/security/advisories/new).
+   [`tray-tecnologia/tray-api-ai-plugin`](https://github.com/tray-tecnologia/tray-api-ai-plugin/security/advisories/new).
 2. **E-mail direto:** `rmoraes@tray.net.br` com o assunto
-   `[SECURITY] tray-api-claude-plugin`.
+   `[SECURITY] tray-api-ai-plugin`.
 
 Inclua, na medida do possível:
 

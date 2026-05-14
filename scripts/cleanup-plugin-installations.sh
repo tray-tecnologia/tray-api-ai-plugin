@@ -20,7 +20,7 @@ set -euo pipefail
 
 PLUGIN_NAME="tray-api"
 MARKETPLACE_NAME="tray-plugins"
-KEEP_PATH_DEFAULT="$HOME/projetos/tray-api-claude-plugin"
+KEEP_PATH_DEFAULT="$HOME/projetos/tray-api-ai-plugin"
 
 KEEP_PATH="$KEEP_PATH_DEFAULT"
 DRY_RUN=0
@@ -39,7 +39,7 @@ Opcoes:
 Exemplos:
   $0 --dry-run
   $0 --yes
-  $0 --keep /home/me/projetos/tray-api-claude-plugin
+  $0 --keep /home/me/projetos/tray-api-ai-plugin
 EOF
 }
 
@@ -246,10 +246,10 @@ info "7) Removendo caches de submodulo git relacionados ao plugin ..."
 if [[ -d "$HOME/projetos" ]]; then
   while IFS= read -r -d '' submod; do
     case "$(basename "$submod")" in
-      tray-api-claude-plugin|tray-plugins) safe_rm "$submod" ;;
+      tray-api-ai-plugin|tray-api-claude-plugin|tray-plugins) safe_rm "$submod" ;;
     esac
   done < <(find "$HOME/projetos" -maxdepth 6 -type d \
-            \( -name 'tray-api-claude-plugin' -o -name 'tray-plugins' \) \
+            \( -name 'tray-api-ai-plugin' -o -name 'tray-api-claude-plugin' -o -name 'tray-plugins' \) \
             -path '*/.git/modules/*' -print0 2>/dev/null)
 fi
 

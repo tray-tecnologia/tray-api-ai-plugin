@@ -1,4 +1,4 @@
-# Contribuindo para o tray-api-claude-plugin
+# Contribuindo para o tray-api-ai-plugin
 
 Obrigado pelo interesse em contribuir. Este plugin é mantido pela Tray e pela
 comunidade de parceiros, e qualquer melhoria — correção de erro, novo recurso,
@@ -8,8 +8,8 @@ clarificação na documentação — é bem-vinda.
 
 ### 1. Confira o que já existe
 
-- [Issues abertas](https://github.com/tray-tecnologia/tray-api-claude-plugin/issues)
-- [Pull requests abertos](https://github.com/tray-tecnologia/tray-api-claude-plugin/pulls)
+- [Issues abertas](https://github.com/tray-tecnologia/tray-api-ai-plugin/issues)
+- [Pull requests abertos](https://github.com/tray-tecnologia/tray-api-ai-plugin/pulls)
 - Documentação oficial da API: https://developers.tray.com.br
 
 Se sua mudança for grande (novo skill, novo agente, mudança em hook), abra
@@ -206,7 +206,7 @@ estão alinhados.
 ## Licença
 
 Ao contribuir você concorda em licenciar sua contribuição sob a
-[GPL-3.0](LICENSE), mesma licença do projeto.
+[MIT License](LICENSE), mesma licença do projeto.
 
 ## Como expandir sinônimos do `search_docs.mjs`
 

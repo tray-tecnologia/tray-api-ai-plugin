@@ -10,17 +10,6 @@
           }
         ]
       }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "[Aa][Pp][Ii][\\s.-]+[Tt][Rr][Aa][Yy]\\b|\\b[Tt][Rr][Aa][Yy][\\s.-]+[Aa][Pp][Ii]\\b|\\bloja\\s+[Tt]ray\\b|\\bplataforma\\s+[Tt]ray\\b|\\b[Tt]ray\\s+[Tt]ecnologia\\b|\\bwebhook[s]?\\s+(?:da\\s+)?[Tt]ray\\b|\\bcliente[s]?\\s+(?:da\\s+|na\\s+)[Tt]ray\\b|\\bproduto[s]?\\s+(?:da\\s+|na\\s+)[Tt]ray\\b|\\bpedido[s]?\\s+(?:da\\s+|na\\s+)[Tt]ray\\b|\\b(?:na|da|de|com|minha)\\s+(?:minha\\s+|sua\\s+|loja\\s+)?[Tt]ray\\b|api_address|access_token|consumer_key|consumer_secret|refresh_token|developers\\.tray|\\/products|\\/orders|\\/customers|\\/auth|scope_name|scope_id|seller_id",
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "IMPORTANTE: Este contexto é APENAS informativo — nunca interrompa, bloqueie ou recuse a operação do usuário por causa dele. Se a pergunta não for sobre a API Tray, ignore completamente este contexto e prossiga normalmente com o que o usuário pediu. Contexto da API Tray (use somente se relevante): a API usa OAuth 2.0 com access_token como query parameter, o access_token expira em 3 horas, o refresh_token em 30 dias, há limite de 180 req/min e 10.000 req/dia, e a URL base segue o padrão https://{api_address}/. A documentação oficial está em https://developers.tray.com.br. Se durante a tarefa você executar requisições à API Tray (curl/node/wget/fetch contra api_address ou developers.tray.com.br) e receber: HTTP 401 → access_token expirado ou inválido; renove via GET https://{api_address}/auth?refresh_token={token}. HTTP 429 → rate limit; aplique backoff exponencial e/ou agrupe em lotes (limite 180 req/min, 10.000 req/dia). HTTP 400 com erro de validação de campo → execute skills/<recurso>/scripts/validate.mjs com o payload antes de tentar de novo. HTTP 404 em endpoint Tray → confirme o api_address (varia por loja, retornado no callback OAuth). Payloads de criação/atualização DEVEM envolver os dados na chave do recurso: {\"Product\": {...}}, {\"Order\": {...}}, {\"Customer\": {...}}."
-          }
-        ]
-      }
     ]
   }
 }

@@ -1,126 +1,162 @@
-import { describe, test } from 'node:test';
+// Calibração: contar JSON em skills/<skill>/schemas/ no ROOT — veja REPO_ROOT_EXPECTED_SCHEMA_COUNT.
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import os from 'node:os';
+import { dirname, join } from 'node:path';
+import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { findAllSchemas, loadSchema } from '../../mcp/lib/load-schemas.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dir, '..', '..');
 
-const KNOWN_SCHEMAS = [
+// Smoke: neste workspace há 0 arquivos JSON em cada skills/<skill>/schemas/ (2026-05-05).
+const REPO_ROOT_EXPECTED_SCHEMA_COUNT = 0;
+
+const KNOWN_SCHEMA_BASE_NAMES = [
   'produto.create',
-  'produto.update',
   'pedido.create',
-  'pedido.update',
-  'cliente.create',
-  'cliente.update',
   'webhook.payload',
-  'variacao.create',
-  'variacao.update',
+  'cliente.update',
   'categoria.create',
-  'categoria.update',
   'marca.create',
-  'marca.update',
+  'variacao.create',
   'auth-request',
-  'auth-refresh',
 ];
 
-describe('findAllSchemas', () => {
-  test('retorna Map com 15 schemas no repositório', () => {
-    const map = findAllSchemas(ROOT);
-    assert.equal(map.size, 15);
-  });
+function writeSchemaFile(root, skillName, baseName, schemaObj) {
+  const dir = join(root, 'skills', skillName, 'schemas');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, `${baseName}.json`), JSON.stringify(schemaObj));
+}
 
-  test('cada entry tem path absoluto existente e schema objeto não-array', () => {
-    const map = findAllSchemas(ROOT);
-    for (const [, entry] of map) {
-      assert.equal(typeof entry.path, 'string');
-      assert.ok(existsSync(entry.path));
-      assert.equal(resolve(entry.path), entry.path);
-      assert.ok(entry.schema !== null && typeof entry.schema === 'object');
-      assert.ok(!Array.isArray(entry.schema));
-    }
+function writeCanonicalLayout(root) {
+  writeSchemaFile(root, 'produtos', 'produto.create', {
+    title: 'ProdutoCreate',
+    type: 'object',
+    properties: { nome: { type: 'string' } },
   });
+  writeSchemaFile(root, 'pedidos', 'pedido.create', {
+    $id: 'https://example/pedido.create',
+    type: 'object',
+  });
+  writeSchemaFile(root, 'webhooks', 'webhook.payload', {
+    type: 'object',
+    properties: { event: { type: 'string' } },
+  });
+  writeSchemaFile(root, 'clientes', 'cliente.update', { type: 'object' });
+  writeSchemaFile(root, 'categorias', 'categoria.create', { type: 'object' });
+  writeSchemaFile(root, 'marcas', 'marca.create', { type: 'object' });
+  writeSchemaFile(root, 'variacoes', 'variacao.create', { type: 'object' });
+  writeSchemaFile(root, 'autorizacao', 'auth-request', {
+    type: 'object',
+    properties: { consumer_key: { type: 'string' } },
+  });
+}
 
-  test('schemas conhecidos estão presentes', () => {
-    const map = findAllSchemas(ROOT);
-    for (const name of KNOWN_SCHEMAS) {
-      assert.ok(map.has(name), `missing schema: ${name}`);
-    }
-  });
-
-  test('dir sem pasta skills retorna Map vazia', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'load-schemas-no-skills-'));
-    try {
-      const map = findAllSchemas(tmp);
-      assert.equal(map.size, 0);
-    } finally {
-      rmSync(tmp, { recursive: true, force: true });
-    }
-  });
-
-  test('skill sem schemas/ é ignorada', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'load-schemas-skip-'));
-    try {
-      mkdirSync(join(tmp, 'skills', 'sem-schemas', 'SKILL.md'), { recursive: true });
-      mkdirSync(join(tmp, 'skills', 'com-schemas', 'schemas'), { recursive: true });
-      writeFileSync(
-        join(tmp, 'skills', 'com-schemas', 'schemas', 'only.one.json'),
-        '{"x":1}',
-      );
-      const map = findAllSchemas(tmp);
-      assert.equal(map.size, 1);
-      assert.ok(map.has('only.one'));
-    } finally {
-      rmSync(tmp, { recursive: true, force: true });
-    }
-  });
-
-  test('lança quando dois arquivos têm o mesmo basename (colisão)', () => {
-    const tmp = mkdtempSync(join(tmpdir(), 'load-schemas-collision-'));
-    const pFoo = resolve(tmp, 'skills', 'foo', 'schemas', 'colision.json');
-    const pBar = resolve(tmp, 'skills', 'bar', 'schemas', 'colision.json');
-    try {
-      mkdirSync(dirname(pFoo), { recursive: true });
-      mkdirSync(dirname(pBar), { recursive: true });
-      writeFileSync(pFoo, '{"a":1}');
-      writeFileSync(pBar, '{"b":2}');
-      assert.throws(
-        () => findAllSchemas(tmp),
-        (err) => {
-          assert.ok(err instanceof Error);
-          assert.match(err.message, /colis|collision/i);
-          assert.ok(err.message.includes(pFoo), err.message);
-          assert.ok(err.message.includes(pBar), err.message);
-          return true;
-        },
-      );
-    } finally {
-      rmSync(tmp, { recursive: true, force: true });
-    }
-  });
+test('findAllSchemas(repo root) returns calibrated schema count', () => {
+  const map = findAllSchemas(ROOT);
+  assert.equal(
+    map.size,
+    REPO_ROOT_EXPECTED_SCHEMA_COUNT,
+    `expected ${REPO_ROOT_EXPECTED_SCHEMA_COUNT} schemas under skills/*/schemas in repo root`
+  );
 });
 
-describe('loadSchema', () => {
-  test('retorna a mesma entry que map.get para nome existente', () => {
-    const map = findAllSchemas(ROOT);
-    const viaLoad = loadSchema('produto.create', map);
-    const viaGet = map.get('produto.create');
-    assert.deepEqual(viaLoad, viaGet);
-    assert.strictEqual(viaLoad, viaGet);
-  });
+test('each entry has absolute path and non-array object schema', () => {
+  const map = findAllSchemas(ROOT);
+  for (const [name, entry] of map) {
+    assert.match(entry.path, /^\//);
+    assert.equal(typeof entry.path, 'string');
+    assert.ok(existsSync(entry.path), `path missing for ${name}`);
+    assert.ok(entry.schema !== null && typeof entry.schema === 'object');
+    assert.ok(!Array.isArray(entry.schema));
+  }
+});
 
-  test('lança SCHEMA_NOT_FOUND para nome inexistente', () => {
-    const map = findAllSchemas(ROOT);
-    assert.throws(
-      () => loadSchema('inexistente', map),
-      (err) => {
-        assert.ok(err instanceof Error);
-        assert.ok(err.message.startsWith('SCHEMA_NOT_FOUND:'), err.message);
-        return true;
-      },
-    );
-  });
+test('canonical schema basenames are discoverable in a layout mirroring the plan', (t) => {
+  const dir = mkdtempSync(join(os.tmpdir(), 'tray-load-schemas-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeCanonicalLayout(dir);
+
+  const map = findAllSchemas(dir);
+  assert.equal(map.size, KNOWN_SCHEMA_BASE_NAMES.length);
+  for (const name of KNOWN_SCHEMA_BASE_NAMES) {
+    assert.ok(map.has(name), `missing schema ${name}`);
+  }
+});
+
+test('loadSchema returns the same entry reference as map.get', (t) => {
+  const dir = mkdtempSync(join(os.tmpdir(), 'tray-load-schemas-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeCanonicalLayout(dir);
+
+  const map = findAllSchemas(dir);
+  const result = loadSchema('produto.create', map);
+  assert.equal(map.get('produto.create'), result);
+  const s = result.schema;
+  assert.ok(
+    s.title === 'ProdutoCreate' || s.$id || s.properties !== undefined,
+    'expected identifiable produto.create schema shape'
+  );
+});
+
+test('loadSchema throws SCHEMA_NOT_FOUND when name is missing', (t) => {
+  const dir = mkdtempSync(join(os.tmpdir(), 'tray-load-schemas-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  writeCanonicalLayout(dir);
+  const map = findAllSchemas(dir);
+
+  assert.throws(
+    () => loadSchema('inexistente', map),
+    (err) =>
+      err instanceof Error &&
+      err.message.startsWith('SCHEMA_NOT_FOUND:'),
+    'expected SCHEMA_NOT_FOUND prefix'
+  );
+});
+
+test('findAllSchemas throws on basename collision listing both paths', (t) => {
+  const dir = mkdtempSync(join(os.tmpdir(), 'tray-load-schemas-coll-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+
+  writeSchemaFile(dir, 'foo', 'colision', { a: 1 });
+  writeSchemaFile(dir, 'bar', 'colision', { b: 2 });
+
+  assert.throws(
+    () => findAllSchemas(dir),
+    (err) => {
+      assert.ok(err instanceof Error);
+      assert.match(err.message, /collision/i);
+      assert.match(err.message, /foo[/\\].*colision\.json/);
+      assert.match(err.message, /bar[/\\].*colision\.json/);
+      return true;
+    }
+  );
+});
+
+test('skills without schemas/ are skipped; JSON outside schemas/ is ignored', (t) => {
+  const dir = mkdtempSync(join(os.tmpdir(), 'tray-load-schemas-mixed-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+
+  mkdirSync(join(dir, 'skills', 'sem_schemas'), { recursive: true });
+  writeFileSync(join(dir, 'skills', 'sem_schemas', 'NOTE.txt'), 'no schemas dir');
+
+  mkdirSync(join(dir, 'skills', 'lateral'), { recursive: true });
+  writeFileSync(
+    join(dir, 'skills', 'lateral', 'ignored.json'),
+    JSON.stringify({ ignored: true })
+  );
+
+  writeSchemaFile(dir, 'com', 'only.one', { type: 'object' });
+
+  const map = findAllSchemas(dir);
+  assert.equal(map.size, 1);
+  assert.ok(map.has('only.one'));
 });
