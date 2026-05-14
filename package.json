@@ -51,7 +51,7 @@
     "lint:skills": "node scripts/lint-skills.mjs",
     "mcp": "node mcp/server.mjs",
     "smoke": "node scripts/smoke-test.js",
-    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test": "node --test $(find tests -name '*.test.mjs' | sort)",
     "version:check": "node scripts/sync-version.js --check",
     "version:set": "node scripts/sync-version.js --set"
   },
