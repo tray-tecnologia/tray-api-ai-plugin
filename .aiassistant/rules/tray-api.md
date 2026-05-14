@@ -25,6 +25,43 @@ Documentação oficial: https://developers.tray.com.br
 - Paginação máxima: 50 itens. Rate limit: 180 req/min, 10.000/dia.
 - Datas: `YYYY-MM-DD`; timestamps: `YYYY-MM-DD HH:MM:SS`.
 
+### Bloco MANDATORY e lint de skills
+
+- Toda skill nova **deve** ter `## MANDATORY: Tool Call(s) Required Before Answering` **imediatamente** após o frontmatter.
+- O bloco **deve** incluir chamada **OBRIGATÓRIA(S)** a `node skills/tray-dev/scripts/search_docs.mjs` (sempre).
+- Skills com schema local (categoria A: `autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`) **devem** incluir também chamada **OBRIGATÓRIA(S)** a `node skills/<recurso>/scripts/validate.mjs`.
+- Validar com `npm run lint:skills`. O CI roda `npm run lint:skills` antes do smoke.
+
+### Validação local
+
+- 8 skills têm `scripts/validate.mjs`: `autorizacao`, `produtos`, `pedidos`,
+  `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`.
+- Skills com múltiplos schemas exigem `--schema=<op>`. Use `--list-schemas`
+  para descobrir os disponíveis.
+- Output humano por default; `--json` para programático. Exit codes:
+  `0` válido · `1` inválido · `2` erro de uso.
+- Formats BR custom: `cpf`, `cnpj`, `cep`, `ean`, `ncm`, `date`, `datetime`,
+  `email`, `uri`. Detalhes em `scripts/lib/SUBSET.md`.
+
+### Busca em docs
+
+Para confirmar comportamento da API antes de gerar código, use a skill `tray-dev`:
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --topic=<slug> "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --json "<termo>"
+```
+
+- Cache local em `~/.cache/tray-plugin/dev-docs/` (TTL 24h)
+- Exit codes: 0 (ok), 1 (erro execução), 2 (erro de uso)
+- Tópicos: `--list-topics` para a lista canônica
+- Privacidade: `OPT_OUT_INSTRUMENTATION=true` desativa telemetria
+
+### Servidor MCP
+
+- Servidor em `mcp/`: `npm run mcp` ou `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp`. Tools `tray.search_docs` e `tray.validate`; configuração em `mcp/README.md`.
+
 ---
 
 ## Skills por recurso
@@ -77,6 +114,9 @@ Leia o arquivo correspondente antes de gerar código:
 - Vendas: `skills/produtos-vendidos/SKILL.md`
 - SEO: `skills/palavras-chave/SKILL.md`
 - Parceiros: `skills/parceiros/SKILL.md`
+
+**Busca em docs (`tray-dev`)**
+- Busca lexical local em developers.tray.com.br (BM25 + sinônimos PT-BR + cache 24h): `skills/tray-dev/SKILL.md`
 
 ---
 

@@ -13,6 +13,24 @@ when_not_to_use: >
   diferenciados permanentes por grupo ou segmento de cliente.
 ---
 
+## MANDATORY: Tool Call Required Before Answering
+
+> **Esta chamada é OBRIGATÓRIA, não opcional.** Execute-a antes de gerar
+> qualquer código ou payload. Se você está respondendo sem ter chamado a
+> ferramenta abaixo, **pare e chame agora**.
+
+### Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=listas-preco-b2b "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+> **Nota:** este recurso ainda não tem `validate.mjs` local. Você é responsável
+> por revisar campos obrigatórios contra a doc retornada e o resumo abaixo.
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:

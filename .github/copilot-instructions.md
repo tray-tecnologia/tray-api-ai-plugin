@@ -35,6 +35,41 @@ Documentação oficial: https://developers.tray.com.br
 - CPF (11 dígitos) e CNPJ (14 dígitos) — validar antes de enviar.
 - CEP: 8 dígitos numéricos.
 
+### Bloco MANDATORY e lint de skills
+
+- Toda skill nova **deve** ter `## MANDATORY: Tool Call(s) Required Before Answering` **imediatamente** após o frontmatter.
+- O bloco **deve** incluir chamada **OBRIGATÓRIA(S)** a `node skills/tray-dev/scripts/search_docs.mjs` (sempre).
+- Skills com schema local (categoria A: `autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`) **devem** incluir também chamada **OBRIGATÓRIA(S)** a `node skills/<recurso>/scripts/validate.mjs`.
+- Validar com `npm run lint:skills`. O CI roda `npm run lint:skills` antes do smoke.
+
+### Validação local
+
+- 8 skills têm `scripts/validate.mjs`: `autorizacao`, `produtos`, `pedidos`,
+  `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`.
+- Skills com múltiplos schemas exigem `--schema=<op>`. Use `--list-schemas`
+  para descobrir os disponíveis.
+- Output humano por default; `--json` para programático. Exit codes:
+  `0` válido · `1` inválido · `2` erro de uso.
+- Formats BR custom: `cpf`, `cnpj`, `cep`, `ean`, `ncm`, `date`, `datetime`,
+  `email`, `uri`. Detalhes em `scripts/lib/SUBSET.md`.
+
+### Busca em docs
+
+Para confirmar comportamento da API antes de gerar código, use a skill `tray-dev`:
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --topic=<slug> "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --json "<termo>"
+```
+
+- Cache local em `~/.cache/tray-plugin/dev-docs/` (TTL 24h)
+- Exit codes: 0 (ok), 1 (erro execução), 2 (erro de uso)
+- Tópicos: `--list-topics` para a lista canônica
+- Privacidade: `OPT_OUT_INSTRUMENTATION=true` desativa telemetria
+
+**Servidor MCP:** `mcp/` — boot com `npm run mcp` ou `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp`; tools `tray.search_docs` e `tray.validate`; `mcp/README.md` para clientes.
+
 ---
 
 ## Documentação por recurso
@@ -87,6 +122,9 @@ neste repositório:
 - SEO: `skills/palavras-chave/SKILL.md`
 - Parceiros: `skills/parceiros/SKILL.md`
 - Newsletter: `skills/newsletter/SKILL.md`
+
+### Busca em docs (`tray-dev`)
+- `skills/tray-dev/SKILL.md` — busca lexical local em developers.tray.com.br (BM25 + sinônimos PT-BR + cache 24h)
 
 ---
 

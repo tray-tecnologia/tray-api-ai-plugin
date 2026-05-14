@@ -1,6 +1,6 @@
 {
   "name": "@tray-tecnologia/tray-api-plugin",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "Plugin de documentação da API Tray para agentes de IA.",
   "type": "module",
   "license": "MIT",
@@ -40,11 +40,30 @@
     ".cursor/rules/**",
     ".github/copilot-instructions.md",
     ".aiassistant/rules/**",
-    "gemini-extension.json"
+    "gemini-extension.json",
+    "mcp/**",
+    ".mcp.json"
   ],
+  "bin": {
+    "tray-mcp": "./mcp/server.mjs"
+  },
   "scripts": {
+    "lint:skills": "node scripts/lint-skills.mjs",
+    "mcp": "node mcp/server.mjs",
     "smoke": "node scripts/smoke-test.js",
+    "test": "node --test $(find tests -name '*.test.mjs' | sort)",
     "version:check": "node scripts/sync-version.js --check",
-    "version:set": "node scripts/sync-version.js"
+    "version:set": "node scripts/sync-version.js --set"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

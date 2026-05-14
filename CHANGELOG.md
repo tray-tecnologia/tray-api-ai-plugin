@@ -1,11 +1,161 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.0] - 2026-05-05
+
+### Adicionado
+
+- Servidor MCP em `mcp/` (JS puro, ESM) compatível com qualquer cliente MCP (Claude Desktop, Cursor, Continue.dev, Zed, agents customizados, backends).
+- 2 tools MCP: `tray.search_docs` (BM25 em developers.tray.com.br, reusa P1.2) e `tray.validate` (validação estrutural com schemas locais, reusa P1.1).
+- Entrada `bin: {tray-mcp}` em `package.json` — após `npm install -g`, comando `tray-mcp` fica disponível globalmente; via `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp` sem instalar.
+- Script `npm run mcp` para boot local (stdio).
+- `.mcp.json` no root como template canônico para configuração de clientes MCP.
+- `mcp/README.md` (212 linhas) com setup detalhado para Claude Desktop, Cursor, Continue.dev e clientes genéricos.
+- `mcp/lib/load-schemas.mjs` — descobre schemas em `skills/<recurso>/schemas/*.json` em runtime (8 testes).
+- `mcp/tools/validate.mjs` — handler MCP que reusa `validatePayload` com input Zod (8 testes).
+- `mcp/tools/search-docs.mjs` — handler MCP que reusa `search`/`loadOrFetch` com índice memoizado (8 testes).
+- `mcp/server.mjs` — entrypoint stdio com `createServer()` exportado para testes (boot < 200ms, stdout silencioso).
+- Suite `tests/mcp/` com 30 testes (load-schemas, tools-validate, tools-search-docs, server in-process via `InMemoryTransport`).
+- Smoke test seção 15 (3 checks via JSON-RPC stdio: ListTools, CallTool inválido, total).
+- Bloco 14 em `docs/CENARIOS-DE-TESTE.md` (5 cenários manuais para clientes MCP — boot stand-alone, Claude Desktop, Cursor, schema not found, modo offline).
+
+### Mudado
+
+- `package.json` ganha bloco `dependencies` (`@modelcontextprotocol/sdk@^1.29.0`, `zod@^3.23.0`) — primeiras dependências de runtime do projeto.
+- `files` em `package.json` inclui `"mcp/**"` e `".mcp.json"` para distribuição via npm.
+- README.md ganha seção `## Servidor MCP (mcp/)` com uso rápido e link para `mcp/README.md`.
+- CONTRIBUTING.md ganha seção `## Como evoluir o servidor MCP` com guia para adicionar tools.
+- AGENTS.md, GEMINI.md, `.cursor/rules/tray-api.mdc`, `.aiassistant/rules/tray-api.md` e `.github/copilot-instructions.md` referenciam o servidor MCP.
+- AGENTS.md ganhou entrada na tabela "Comandos disponíveis" para `npm run mcp`.
+
+### Notas
+
+- `console.log` é proibido em qualquer arquivo de `mcp/` (quebraria o protocolo MCP via stdio). Apenas `console.error` permitido.
+- Total: 356 testes (350 → 356 após Task 6 in-process); 104 smoke checks (101 → 104 após seção 15).
+
+## [1.5.0] - 2026-05-04
+
+### Added
+
+- Bloco `## MANDATORY: Tool Call(s) Required Before Answering` em todas as 34 skills de recursos da API:
+  - 8 skills da categoria A (`autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`) com `search_docs.mjs` **e** `validate.mjs`.
+  - 19 skills da categoria B (escrita sem `validate.mjs`: `cupons`, `multicd`, `pagamentos`, `notas-fiscais`, `status-pedido`, `kits`, `caracteristicas`, `carrinho-compras`, `listas-preco-b2b`, `parceiros`, `newsletter`, `imagens-produtos`, `informacoes-adicionais`, `etiquetas-hub`, `emissores-etiqueta`, `enderecos-cliente`, `perfis-cliente`, `configuracao-frete`, `scripts-externos`) com `search_docs.mjs`.
+  - 7 skills da categoria C (somente leitura: `usuarios`, `produtos-vendidos`, `palavras-chave`, `listagem-carrinho`, `informacoes-loja`, `frete`, `etiquetas-mercado-livre`) com `search_docs.mjs`.
+- `scripts/lint-skills.mjs` — linter de conformidade do bloco MANDATORY com 6 regras (presença, posição, comando search, comando validate, ausência de duplicata, frase imperativa). Suporta `--json`, `--help` e arquivo único; exit codes Unix (0/1/2).
+- Suite `tests/lint-skills/` com 9 fixtures + 10 testes cobrindo as 6 regras + skip de `tray-dev`/`visao-geral` + `findSkillFiles`.
+- Script `npm run lint:skills`.
+- Smoke test seção 14 chama `lint:skills` (101 checks no total).
+- Step `Lint skills (bloco MANDATORY)` no CI (`.github/workflows/ci.yml`), antes do smoke.
+- Seção "Mandatory Tool Calls em SKILL.md" no `README.md`.
+- Seção "Como adicionar uma skill nova" no `CONTRIBUTING.md` com 3 templates (A/B/C).
+- Bloco 13 em `docs/CENARIOS-DE-TESTE.md` (6 cenários do `lint-skills`).
+
+### Changed
+
+- As 8 skills da categoria A tiveram o "step 5" (`validate.mjs`) movido do `## Antes de responder` para o novo bloco `## MANDATORY: Tool Calls Required Before Answering`, eliminando duplicação.
+- `AGENTS.md`, `GEMINI.md`, `.cursor/rules/tray-api.mdc`, `.aiassistant/rules/tray-api.md` e `.github/copilot-instructions.md` referenciam o novo padrão e o linter `npm run lint:skills`.
+- `AGENTS.md` ganhou entrada na tabela "Comandos disponíveis" para `lint:skills`.
+
+## [1.4.0] - 2026-05-04
+
+### Added
+
+- Skill nova `tray-dev` com `scripts/search_docs.mjs` — busca lexical local (BM25 + sinônimos PT-BR) em `developers.tray.com.br`, com cache 24h em `~/.cache/tray-plugin/dev-docs/`.
+- CLI com 6 flags: `--topic=<slug>`, `--json`, `--limit=<n>`, `--no-cache`, `--refresh`, `--list-topics`, `--help`.
+- Output JSON Shopify-like com `results`, `score`, `topic`, `level`, `anchor`, `cache`, `took`.
+- Exit codes 0/1/2 (Unix-compliant: 0 ok mesmo com 0 resultados; 1 erro execução; 2 erro de uso).
+- Mapa canônico de 35 tópicos (slug → H1 da SPA) em `scripts/lib/topics-map.mjs`.
+- Dicionário inicial de 23 grupos de sinônimos PT-BR ↔ termos da API em `skills/tray-dev/assets/synonyms-pt-br.json`.
+- Telemetria opt-out via `OPT_OUT_INSTRUMENTATION=true`.
+- Cache de override via env: `TRAY_DOCS_CACHE_DIR`, `TRAY_DOCS_CACHE_TTL_MS`, `TRAY_DOCS_BASE_URL`.
+- Suite de testes nova em `tests/search/` (~62 testes, fetch mockado, sem rede em CI).
+- Novo Bloco 12 em `docs/CENARIOS-DE-TESTE.md` (search_docs CLI + offline).
+- Smoke test seção 13 (4 checks via fixture mockada).
+- Stemmer PT-BR simples em `scripts/lib/stemmer-pt-br.mjs`.
+- Splitter de markdown em `scripts/lib/markdown-splitter.mjs`.
+- Cache helper em `scripts/lib/docs-cache.mjs` (TTL, hash, fallback offline).
+- Indexer/searcher BM25 em `scripts/lib/search-index.mjs`.
+
+### Changed
+
+- `npm test` agora cobre `tests/**/*.test.mjs` (validate + search).
+- `README.md` ganha seção "Busca em docs com `search_docs.mjs`".
+- `CONTRIBUTING.md` ganha seção "Como expandir sinônimos do `search_docs.mjs`".
+- AGENTS.md, GEMINI.md, .cursor/rules, .aiassistant/rules, .github/copilot-instructions.md atualizados com bloco "Busca em docs".
+
+### Privacy
+
+- Header `X-Tray-AI-Telemetry: on` enviado por default ao buscar `developers.tray.com.br`. **Nenhuma query é enviada no header** — apenas indicação de origem do plugin. Opt-out documentado em README.
+
+## [1.3.0] - 2026-05-04
+
+### Adicionado
+
+- `validate.mjs` v2 com saída JSON estruturada (`--json`), entrada via stdin,
+  seleção explícita de schema (`--schema=`), listagem (`--list-schemas`),
+  exit codes 0/1/2 distintos e flag `--help`.
+- `scripts/lib/formats-br.mjs` com 9 formats: `cpf`, `cnpj`, `cep`, `ean`,
+  `ncm`, `date`, `datetime`, `email`, `uri`. Algoritmos de DV implementados
+  para CPF, CNPJ e GTIN (EAN). Aplicados via `format: <nome>` nos schemas.
+- Schemas multi-operação em `skills/<skill>/schemas/<recurso>.<op>.json`
+  para 8 skills: `autorizacao` (auth-request, auth-refresh), `produtos`
+  (produto.create, produto.update), `pedidos` (pedido.create, pedido.update),
+  `clientes` (cliente.create, cliente.update), `webhooks` (webhook.payload),
+  `variacoes` (variacao.create, variacao.update), `categorias`
+  (categoria.create, categoria.update), `marcas` (marca.create, marca.update)
+  — total: 15 schemas.
+- 3 skills novas com `validate.mjs`: `variacoes`, `categorias`, `marcas`.
+- Suite de testes em `tests/validate/` com `node --test` nativo (≥ 200
+  casos cobrindo válidos, inválidos e oracle AJV em features comuns).
+- `scripts/lint-schemas.mjs` rejeita schemas que usam keywords fora do
+  subset documentado. Integrado ao `npm run smoke` (seção 12).
+- `scripts/lib/SUBSET.md` documenta o subset JSON Schema suportado em
+  runtime (`required`, `type`, `enum`, `maxLength`, `minimum`, `pattern`,
+  `format`, `additionalProperties: false`).
+- `tests/validate/helpers/ajv-oracle.mjs` — wrapper AJV usado nos testes
+  como oracle de conformidade Draft-07 nas features comuns.
+- `tests/validate/helpers/fixtures.mjs` com CPFs, CNPJs, EANs e NCMs
+  canônicos válidos e inválidos compartilhados entre testes.
+- Script `npm test` em `package.json` rodando `node --test tests/validate/`.
+- `package-lock.json` na raiz.
 
 ### Alterado
 
-- **Licença migrada de GPL-3.0 para MIT.** Aplica-se a versões futuras; cópias previamente distribuídas mantêm os termos GPL-3.0 originais. Atualizados `LICENSE`, badge e seções de licença em `README.md`, `CONTRIBUTING.md` e o campo `license` em `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json` e `.codex-plugin/plugin.json`. Decisão alinhada com o padrão permissivo adotado por toolkits de IA de referência (ex.: Shopify/Shopify-AI-Toolkit)
-- **Repositório renomeado de `tray-api-claude-plugin` para `tray-api-ai-plugin`** para refletir compatibilidade multi-plataforma (Claude Code, Cursor, Codex, Gemini CLI, GitHub Copilot, JetBrains AI, Windsurf). Comandos de instalação atualizados em `README.md`, `CONTRIBUTING.md` e `SECURITY.md`. Campo `repository` atualizado nos cinco manifests de plugin. Nome do pacote npm (`@tray-tecnologia/tray-api-plugin`) e ID do plugin (`tray-api`) **não foram alterados**, preservando comandos como `npm install @tray-tecnologia/tray-api-plugin` e `/plugin install tray-api@tray-plugins`. `scripts/cleanup-plugin-installations.sh` reconhece ambos os nomes durante a transição. URLs antigas continuam funcionando via redirect permanente do GitHub
+- `scripts/lib/validate-schema.mjs` v2 — refatorado para suportar `format`,
+  `pattern`, múltiplos schemas, output JSON e seleção explícita de operação.
+  Erros agora carregam `path` e `keyword` (formato Shopify-like).
+- 5 skills migradas (`autorizacao`, `produtos`, `pedidos`, `clientes`,
+  `webhooks`) — `assets/schema.json` removido, substituído por `schemas/`.
+  Passo 5 do "Antes de responder" agora inclui `--schema=<op>`.
+- `package.json` ganha `devDependencies: ajv ^8.17.1, ajv-formats ^3.0.1`,
+  campo `engines.node: ">=20"` e script `npm test`.
+- `.github/workflows/ci.yml` agora roda `npm ci && npm test` antes de
+  `npm run smoke` em matrix Node 20/22.
+- `scripts/smoke-test.js` — seções 6 e 7 reescritas para iterar pelos
+  schemas multi-operação (1 caso válido + 1 inválido por schema). Nova
+  seção 12 executa `lint-schemas.mjs` em todos os schemas das 8 skills.
+- Cenário 3.2 do `docs/CENARIOS-DE-TESTE.md` reescrito: comportamento
+  alterado em 1.3.0 — schema agora rejeita CPF malformado pelo `format: cpf`,
+  não apenas pelo `AGENTS.md`. ID `3.2` mantido (estável).
+- `README.md` ganha seção "Validação local com `validate.mjs`" detalhando
+  contrato CLI completo.
+- `CONTRIBUTING.md` reescreve seção de criação de skill para multi-operação;
+  adiciona seção "Como criar um schema novo" com checklist passo a passo.
+- `AGENTS.md`, `GEMINI.md`, `.aiassistant/rules/tray-api.md`,
+  `.cursor/rules/tray-api.mdc` e `.github/copilot-instructions.md` ganham
+  bloco "Validação local" com 8 skills, lista de formats BR e exit codes.
+
+### Removido
+
+- `assets/schema.json` em todas as 5 skills migradas (substituído por
+  `schemas/<recurso>.<op>.json`).
+
+### Quebra retroativa
+
+- Skills com múltiplas operações exigem agora `--schema=<op>` ao invocar
+  `validate.mjs`. Os próprios `SKILL.md` já trazem o exemplo correto;
+  automações externas que chamam o CLI direto sem flag precisam atualizar.
+
+---
 
 ## [1.2.0] - 2026-04-29
 
@@ -28,6 +178,8 @@
 
 ### Alterado
 
+- **Licença migrada de GPL-3.0 para MIT.** Aplica-se a versões futuras; cópias previamente distribuídas mantêm os termos GPL-3.0 originais. Atualizados `LICENSE`, badge e seções de licença em `README.md`, `CONTRIBUTING.md` e o campo `license` em `package.json`, `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`, `.cursor-plugin/plugin.json` e `.codex-plugin/plugin.json`. Decisão alinhada com o padrão permissivo adotado por toolkits de IA de referência (ex.: Shopify/Shopify-AI-Toolkit)
+- **Repositório renomeado de `tray-api-claude-plugin` para `tray-api-ai-plugin`** para refletir compatibilidade multi-plataforma (Claude Code, Cursor, Codex, Gemini CLI, GitHub Copilot, JetBrains AI, Windsurf). Comandos de instalação atualizados em `README.md`, `CONTRIBUTING.md` e `SECURITY.md`. Campo `repository` atualizado nos cinco manifests de plugin. Nome do pacote npm (`@tray-tecnologia/tray-api-plugin`) e ID do plugin (`tray-api`) **não foram alterados**, preservando comandos como `npm install @tray-tecnologia/tray-api-plugin` e `/plugin install tray-api@tray-plugins`. `scripts/cleanup-plugin-installations.sh` reconhece ambos os nomes durante a transição. URLs antigas continuam funcionando via redirect permanente do GitHub
 - `hooks/hooks.json` — `matcher` do `UserPromptSubmit` reescrito para cobrir vocabulário PT-BR realista. O matcher antigo (`api.*tray|tray.*api|access_token|...`) só disparava com termos técnicos em inglês e não casava com prompts naturais como *"liste os produtos da minha loja Tray"*. O novo matcher usa classes de caracteres (`[Tt]ray`, `[Aa][Pp][Ii]`) e word boundaries para casar com **"loja Tray"**, **"API Tray"**, **"webhooks da Tray"**, **"produtos/pedidos/clientes da/na Tray"**, **"da minha Tray"**, etc., sem disparar em falsos positivos como **"bandeja (tray) de comida"** ou **"lib de UI chamada Tray"**. Validado contra os 18 cenários relevantes em `docs/CENARIOS-DE-TESTE.md` via `scripts/test-prompt-matcher.mjs`
 - `hooks/hooks.json` — prompt do `PostToolUse:Write|Edit` reescrito para retornar JSON estruturado `{"ok": true | false, "reason": "..."}` conforme schema oficial documentado em [Claude Code](http://code.claude.com/docs/en/hooks#prompt-based-hooks) e [Cursor](https://cursor.com/docs/hooks.md). Hooks tipo `prompt` **devem** retornar `{ok, reason}` JSON; instruir "não responda" em linguagem natural fazia a LLM gerar prosa em PT-BR que o orquestrador interpretava como bloqueio, disparando `PostToolUse:Write hook stopped continuation` em arquivos triviais como `.env.example`. As regras de detecção (credencial real hardcoded, payload sem chave do recurso, sugestão de `validate.mjs`, ignorar templates) foram preservadas — mudou apenas o **formato de saída**
 - `hooks/hooks.json` — bloco `PostToolUse:Bash` **removido**. Tinha o mesmo defeito estrutural do `Write|Edit` original (prompt instruía silêncio violando o contrato `{ok, reason}`), mas com efeito ainda pior: disparava `PostToolUse:Bash hook stopped continuation` em comandos triviais como `ls`, `find`, `git status`, **interrompendo o fluxo do agente em tarefas legítimas do plugin** (ex.: agente `configuracao-aplicativo` rodando o cenário 1.1 dos testes). A inteligência reativa que ele tentava prover (HTTP 401/429/400/404) foi migrada para o prompt do `UserPromptSubmit`, que é informativo e não bloqueia o fluxo

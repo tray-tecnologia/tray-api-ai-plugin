@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Customer",
+  "description": "Payload de cadastro de cliente via POST /customers. Pessoa física usa cpf; PJ usa cnpj. Doc: https://developers.tray.com.br/#api-de-clientes",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Nome completo (PF) ou razão social (PJ)."
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Email principal do cliente."
+    },
+    "cpf": {
+      "type": "string",
+      "format": "cpf",
+      "description": "CPF (11 dígitos numéricos sem pontuação) — pessoa física."
+    },
+    "cnpj": {
+      "type": "string",
+      "format": "cnpj",
+      "description": "CNPJ (14 dígitos numéricos sem pontuação) — pessoa jurídica."
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["M", "F"],
+      "description": "Gênero do cliente (M ou F)."
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Data de nascimento YYYY-MM-DD."
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone com DDD."
+    },
+    "newsletter": {
+      "type": "integer",
+      "enum": [0, 1],
+      "description": "1 = aceita receber newsletter."
+    }
+  },
+  "required": ["name", "email"],
+  "additionalProperties": false
+}

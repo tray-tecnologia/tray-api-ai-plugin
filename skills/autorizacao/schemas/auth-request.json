@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AuthRequest",
+  "description": "Payload da etapa 3 do OAuth Tray (POST /auth com code). Doc: https://developers.tray.com.br/#autorizacao",
+  "type": "object",
+  "properties": {
+    "consumer_key": {
+      "type": "string",
+      "description": "Chave do aplicativo emitida pela Tray ao registrar o app."
+    },
+    "consumer_secret": {
+      "type": "string",
+      "description": "Segredo do aplicativo emitido pela Tray."
+    },
+    "code": {
+      "type": "string",
+      "description": "Código de autorização recebido no callback após o lojista autorizar."
+    }
+  },
+  "required": ["consumer_key", "consumer_secret", "code"],
+  "additionalProperties": false
+}

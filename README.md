@@ -241,6 +241,191 @@ Ativados automaticamente pelo `assistente-migracao`. Consulte [agents/AGENTES.md
 # Valida se sua integração está pronta para homologação
 ```
 
+## Validação local com `validate.mjs`
+
+8 das 35 skills do plugin (`autorizacao`, `produtos`, `pedidos`, `clientes`,
+`webhooks`, `variacoes`, `categorias`, `marcas`) têm um script
+`scripts/validate.mjs` para validar payloads contra o schema oficial **antes**
+de chamar a API Tray.
+
+### Uso básico
+
+```
+node skills/<skill>/scripts/validate.mjs --schema=<op> '<payload_json>'
+```
+
+Exemplo:
+
+```
+node skills/produtos/scripts/validate.mjs --schema=produto.create \
+  '{"Product":{"name":"Camiseta","price":49.90}}'
+```
+
+### Flags
+
+- `--schema=<nome>` — obrigatório quando a skill tem múltiplos schemas; opcional se há só 1.
+- `--json` — saída programática (formato Shopify-like) em vez de PT-BR humano.
+- `--list-schemas` — lista os schemas disponíveis na skill e sai com 0.
+- `--help` — imprime uso.
+
+### Exit codes
+
+| Code | Significado |
+|---|---|
+| 0 | Payload válido |
+| 1 | Payload inválido (campos faltando, tipo errado, format BR errado, etc.) |
+| 2 | Erro de uso (schema inexistente, JSON malformado, `--schema` faltando quando há múltiplos) |
+
+### Stdin
+
+Aceita pipe sem flag adicional:
+
+```
+echo '{"Product":{"name":"X","price":1}}' | \
+  node skills/produtos/scripts/validate.mjs --schema=produto.create
+```
+
+### Subset JSON Schema suportado
+
+O validador é zero-deps em runtime e implementa um subset de JSON Schema
+Draft-07. Detalhes em [`scripts/lib/SUBSET.md`](scripts/lib/SUBSET.md).
+
+Formats brasileiros (CPF/CNPJ/CEP/EAN/NCM com algoritmos de DV; date e
+datetime no formato Tray) são implementados em
+[`scripts/lib/formats-br.mjs`](scripts/lib/formats-br.mjs).
+
+## Busca em docs com `search_docs.mjs`
+
+A skill `tray-dev` indexa localmente `https://developers.tray.com.br` e oferece busca rápida (BM25) sobre todos os endpoints, parâmetros, exemplos e códigos de erro da API Tray.
+
+### Uso
+
+```bash
+# Busca por termo
+node skills/tray-dev/scripts/search_docs.mjs "como autenticar via OAuth"
+
+# Restringir por recurso
+node skills/tray-dev/scripts/search_docs.mjs --topic=pedidos "cancelamento"
+
+# Output JSON estruturado
+node skills/tray-dev/scripts/search_docs.mjs --json "webhook"
+
+# Forçar refresh da doc
+node skills/tray-dev/scripts/search_docs.mjs --refresh
+
+# Listar tópicos disponíveis
+node skills/tray-dev/scripts/search_docs.mjs --list-topics
+```
+
+### Cache
+
+O primeiro uso baixa a SPA pública (~625 KB) e indexa em `~/.cache/tray-plugin/dev-docs/`. Execuções subsequentes (24h) usam cache. Override via env vars:
+
+- `TRAY_DOCS_CACHE_DIR` — diretório do cache
+- `TRAY_DOCS_CACHE_TTL_MS` — TTL em milissegundos (default 86400000 = 24h)
+
+### Privacidade (telemetria opt-out)
+
+Por padrão, o `search_docs.mjs` envia o header `X-Tray-AI-Telemetry: on` para `developers.tray.com.br` indicando que a chamada veio do plugin. **Nenhuma query é enviada no header.**
+
+Para desativar:
+
+```bash
+export OPT_OUT_INSTRUMENTATION=true
+```
+
+### Exit codes
+
+- `0` query OK (mesmo se 0 resultados)
+- `1` erro de execução (rede falha + sem cache)
+- `2` erro de uso (flag desconhecida, query vazia, topic inexistente)
+
+### Output JSON
+
+```json
+{
+  "query": "OAuth",
+  "expandedQuery": ["oauth","autentic","token","acess"],
+  "topic": null,
+  "results": [
+    {
+      "title": "Gerar Chaves de Acesso",
+      "url": "https://developers.tray.com.br/#gerar-chaves-de-acesso",
+      "snippet": "...",
+      "score": 0.92,
+      "topic": "autorizacao",
+      "h1": "Autorização",
+      "level": "h2",
+      "anchor": "gerar-chaves-de-acesso"
+    }
+  ],
+  "totalResults": 12,
+  "took": 47,
+  "cache": { "hit": true, "ageMs": 3600000, "ttlMs": 86400000 }
+}
+```
+
+### Sinônimos PT-BR
+
+A busca expande termos PT-BR para equivalentes da API (`autenticar` ↔ `oauth`, `criar` ↔ `POST`, etc.). O dicionário fica em `skills/tray-dev/assets/synonyms-pt-br.json`. Para expandir, abra um PR.
+
+## Mandatory Tool Calls em SKILL.md
+
+Toda skill de recurso da API Tray começa com um bloco `## MANDATORY: Tool Call(s) Required Before Answering` listando as ferramentas que o agente DEVE invocar antes de responder:
+
+- **Sempre** — `node skills/tray-dev/scripts/search_docs.mjs --topic=<slug> "<termo>"` para puxar a doc oficial mais recente.
+- **Quando aplicável** (8 skills com schema local) — `node skills/<recurso>/scripts/validate.mjs --schema=<nome>` para validar o payload antes de retornar código.
+
+As skills se dividem em três categorias:
+
+| Categoria | Quantas | Conteúdo do MANDATORY |
+|---|---|---|
+| **A — search + validate** | 8 (autorizacao, produtos, pedidos, clientes, webhooks, variacoes, categorias, marcas) | search_docs **e** validate.mjs |
+| **B — escrita sem validate** | 19 (cupons, multicd, pagamentos, etc.) | search_docs apenas |
+| **C — só leitura** | 7 (usuarios, frete, palavras-chave, etc.) | search_docs apenas |
+
+`tray-dev` e `visao-geral` são puladas (são skills meta).
+
+### Validação automática
+
+```bash
+npm run lint:skills
+```
+
+Verifica em cada `skills/*/SKILL.md` (exceto `tray-dev` e `visao-geral`):
+
+- presença do bloco MANDATORY;
+- posição (antes do `## Antes de responder`);
+- presença do comando de busca;
+- presença do `validate.mjs` (categoria A);
+- ausência de duplicata do step antigo no "Antes de responder";
+- frase imperativa "OBRIGATÓRIA(S)".
+
+Saída em `--json` para integração CI. Exit codes: `0` OK · `1` erro · `2` uso.
+
+O CI roda `npm run lint:skills` antes do smoke; o smoke também invoca o linter na seção 14.
+
+## Servidor MCP (`mcp/`)
+
+O plugin Tray também expõe ferramentas via **Model Context Protocol (MCP)** para clientes que não suportam o formato de plugin nativo (Continue.dev, Zed, agents customizados, backends).
+
+### Tools
+
+- `tray.search_docs` — busca BM25 em `developers.tray.com.br` (mesma engine do P1.2).
+- `tray.validate` — valida payload contra schemas das skills (mesma engine do P1.1).
+
+### Uso rápido
+
+```bash
+# Local (já dentro do repo):
+npm run mcp
+
+# Via npx (após instalar o plugin):
+npx --package=@tray-tecnologia/tray-api-plugin tray-mcp
+```
+
+Configuração para Claude Desktop, Cursor, Continue.dev e clientes genéricos está em [`mcp/README.md`](mcp/README.md). O [`.mcp.json`](.mcp.json) do root serve como template.
+
 ## Contribuindo
 
 Contribuições são bem-vindas! Abra uma issue ou envie um pull request em [GitHub](https://github.com/tray-tecnologia/tray-api-ai-plugin).

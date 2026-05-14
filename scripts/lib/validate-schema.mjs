@@ -1,26 +1,41 @@
 /**
- * Biblioteca de validação compartilhada para os scripts validate.mjs das skills.
+ * Lib de validação compartilhada para os validate.mjs das skills.
  *
- * Implementa um subset do JSON Schema Draft-07 suficiente para validar payloads
- * típicos da API Tray sem dependências de npm:
- *   - required
- *   - type (string, number, integer, boolean, array, object, null) — aceita string|array
- *   - maxLength
- *   - minimum
- *   - enum
- *   - additionalProperties: false (rejeita campos não documentados)
+ * Implementa um subset documentado de JSON Schema Draft-07 (ver
+ * scripts/lib/SUBSET.md) suficiente para validar payloads da API Tray
+ * sem dependências de npm em runtime.
  *
- * Não tenta ser conformidade completa com Draft-07 — é uma heurística pragmática
- * para guiar o agente a montar payloads mais corretos antes de chamar a API.
+ * Suporta: $schema, title, description, type, properties, required,
+ * additionalProperties (false), enum, maxLength, minimum, pattern, format.
+ *
+ * Não suporta (rejeitado pelo lint-schemas.mjs): oneOf, anyOf, allOf,
+ * if/then/else, $ref, definitions, dependencies.
+ *
+ * AJV é usado apenas em testes como oracle de conformidade (Task 4).
+ * Runtime permanece zero-deps.
  */
 
-import { readFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { FORMATS } from './formats-br.mjs';
 
-/**
- * Verifica se um valor casa com um tipo (ou união de tipos) JSON Schema.
- */
+const FORMAT_MESSAGES = {
+  cpf: 'CPF inválido — algoritmo de verificação falhou. Use 11 dígitos numéricos com DV correto.',
+  cnpj: 'CNPJ inválido — algoritmo de verificação falhou. Use 14 dígitos numéricos com DV correto.',
+  cep: 'CEP inválido — use 8 dígitos numéricos.',
+  ean: 'EAN/GTIN inválido — DV incorreto. Aceitos: GTIN-8, GTIN-12, GTIN-13, GTIN-14.',
+  ncm: 'NCM inválido — use 8 dígitos numéricos.',
+  date: 'Data inválida — use YYYY-MM-DD (ex.: 2026-04-15).',
+  datetime: 'Datetime inválido — use YYYY-MM-DD HH:MM:SS.',
+  email: 'Email inválido — formato esperado: usuario@dominio.tld',
+  uri: 'URI inválida — protocolo http/https obrigatório.',
+};
+
+export const VALIDATOR_VERSION = '2.0.0';
+
+/* ─── Tipos ─────────────────────────────────────────────────────────── */
+
 export function matchesType(value, type) {
   const types = Array.isArray(type) ? type : [type];
   return types.some((t) => {
@@ -47,29 +62,36 @@ function suggestValueFor(prop) {
   return '<valor>';
 }
 
+/* ─── Validação básica ──────────────────────────────────────────────── */
+
 /**
- * Valida um payload contra um schema JSON (subset suportado).
+ * Valida um payload contra um schema do subset suportado.
  *
- * @param {object} schema  — schema JSON com properties / required / additionalProperties.
- * @param {object} payload — objeto a validar.
- * @returns {Array<{ message: string, hint: string }>} lista de erros (vazia = válido).
+ * @param {object} schema  — JSON Schema Draft-07 (subset)
+ * @param {object} payload — objeto a validar
+ * @returns {Array<{ path: string, keyword: string, message: string, hint: string }>}
  */
 export function validatePayload(schema, payload) {
   const errors = [];
   const properties = schema.properties ?? {};
+  const titlePrefix = schema.title ? `/${schema.title}` : '';
 
+  // required
   for (const field of schema.required ?? []) {
     const value = payload[field];
     if (value === undefined || value === null || value === '') {
       const prop = properties[field] ?? {};
       const desc = prop.description ? ` (${prop.description})` : '';
       errors.push({
+        path: `${titlePrefix}/${field}`,
+        keyword: 'required',
         message: `"${field}" é obrigatório mas está ausente.`,
         hint: `→ Adicione: "${field}": ${suggestValueFor(prop)}${desc}`,
       });
     }
   }
 
+  // properties
   for (const [field, def] of Object.entries(properties)) {
     const value = payload[field];
     if (value === undefined || value === null) continue;
@@ -77,6 +99,8 @@ export function validatePayload(schema, payload) {
     if (def.type && !matchesType(value, def.type)) {
       const expected = Array.isArray(def.type) ? def.type.join(' ou ') : def.type;
       errors.push({
+        path: `${titlePrefix}/${field}`,
+        keyword: 'type',
         message: `"${field}" deve ser do tipo ${expected} (recebido: ${typeof value}).`,
         hint: `→ Corrija o tipo do campo "${field}"`,
       });
@@ -85,6 +109,8 @@ export function validatePayload(schema, payload) {
 
     if (def.maxLength !== undefined && typeof value === 'string' && value.length > def.maxLength) {
       errors.push({
+        path: `${titlePrefix}/${field}`,
+        keyword: 'maxLength',
         message: `"${field}" excede ${def.maxLength} caracteres (atual: ${value.length}).`,
         hint: `→ Trunce para no máximo ${def.maxLength} caracteres`,
       });
@@ -94,6 +120,8 @@ export function validatePayload(schema, payload) {
       const num = Number(value);
       if (!Number.isNaN(num) && num < def.minimum) {
         errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'minimum',
           message: `"${field}" deve ser >= ${def.minimum} (atual: ${num}).`,
           hint: `→ Use um valor maior ou igual a ${def.minimum}`,
         });
@@ -104,18 +132,49 @@ export function validatePayload(schema, payload) {
       const allowed = def.enum.map(String);
       if (!allowed.includes(String(value))) {
         errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'enum',
           message: `"${field}" tem valor inválido: ${JSON.stringify(value)}.`,
           hint: `→ Valores aceitos: ${def.enum.map((v) => JSON.stringify(v)).join(', ')}`,
         });
       }
     }
+
+    if (def.pattern !== undefined && typeof value === 'string') {
+      const re = new RegExp(def.pattern);
+      if (!re.test(value)) {
+        errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'pattern',
+          message: `"${field}" não casa com o pattern ${JSON.stringify(def.pattern)} (valor: ${JSON.stringify(value)}).`,
+          hint: `→ Ajuste "${field}" para satisfazer o regex ${def.pattern}`,
+        });
+      }
+    }
+
+    if (def.format !== undefined) {
+      const validator = FORMATS[def.format];
+      if (validator && !validator(value)) {
+        const friendly = FORMAT_MESSAGES[def.format] ?? `"${field}" não satisfaz o format ${def.format}.`;
+        errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'format',
+          message: friendly.replace('{field}', field).replace('{value}', JSON.stringify(value)),
+          hint: `→ Corrija "${field}" conforme o format ${def.format} (ver scripts/lib/SUBSET.md)`,
+        });
+      }
+      // format desconhecido: silent (lint-schemas garante que não chegue aqui)
+    }
   }
 
+  // additionalProperties: false
   if (schema.additionalProperties === false) {
     const known = new Set(Object.keys(properties));
     for (const field of Object.keys(payload)) {
       if (!known.has(field)) {
         errors.push({
+          path: `${titlePrefix}/${field}`,
+          keyword: 'additionalProperties',
           message: `"${field}" não é um campo reconhecido (additionalProperties: false).`,
           hint: `→ Remova "${field}" ou verifique se a skill correta é outra (leia when_not_to_use).`,
         });
@@ -127,8 +186,7 @@ export function validatePayload(schema, payload) {
 }
 
 /**
- * Lê stdin de forma portável (Linux/macOS/Windows), retornando string vazia se
- * stdin for um TTY (sem entrada redirecionada).
+ * Lê stdin de forma portável, retornando string vazia se TTY.
  */
 async function readStdin() {
   if (process.stdin.isTTY) return '';
@@ -137,50 +195,103 @@ async function readStdin() {
   return Buffer.concat(chunks).toString('utf-8').trim();
 }
 
-/**
- * Resolve o payload bruto: 1º) argumento CLI, 2º) stdin redirecionado.
- */
-async function resolveRawPayload() {
-  const arg = process.argv[2];
-  if (arg) return arg;
+async function resolveRawPayload(positional) {
+  if (positional) return positional;
   return await readStdin();
 }
 
-/**
- * Helper de alto nível usado por cada `skills/<recurso>/scripts/validate.mjs`.
- * Cada skill chama `runValidator({ skillName, schemaFilename, usageExample })`
- * passando metadados; este helper cuida de:
- *   - Localizar e carregar o schema relativo ao validate.mjs do caller
- *   - Ler o payload (CLI ou stdin)
- *   - Desembrulhar o envelope `{"<title>": {...}}` quando aplicável
- *   - Validar e imprimir resultado em PT-BR
- *   - process.exit(0|1) conforme resultado
- *
- * @param {object} opts
- * @param {string} opts.callerUrl       — `import.meta.url` do validate.mjs caller
- * @param {string} opts.skillName       — nome da skill (ex.: "produtos")
- * @param {string} opts.usageExample    — payload de exemplo para mensagens de erro
- */
+/* ─── CLI argv parsing ─────────────────────────────────────────────── */
+
+function parseArgs(argv) {
+  const out = { json: false, listSchemas: false, schema: null, positional: null, help: false };
+  for (const arg of argv) {
+    if (arg === '--json') out.json = true;
+    else if (arg === '--list-schemas') out.listSchemas = true;
+    else if (arg === '--help' || arg === '-h') out.help = true;
+    else if (arg.startsWith('--schema=')) out.schema = arg.slice('--schema='.length);
+    else if (!out.positional) out.positional = arg;
+  }
+  return out;
+}
+
+function listSchemasInDir(schemasDir) {
+  if (!existsSync(schemasDir)) return [];
+  return readdirSync(schemasDir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => basename(f, '.json'))
+    .sort();
+}
+
+function printUsage(skillName, schemas) {
+  console.error(`Uso: node skills/${skillName}/scripts/validate.mjs [--schema=<op>] [--json] '<payload>'`);
+  console.error(`     ou: echo '<payload>' | node skills/${skillName}/scripts/validate.mjs [--schema=<op>] [--json]`);
+  console.error(`     ou: node skills/${skillName}/scripts/validate.mjs --list-schemas`);
+  if (schemas.length > 0) {
+    console.error(`Schemas disponíveis: ${schemas.join(', ')}`);
+  }
+}
+
+/* ─── runValidator v2 ──────────────────────────────────────────────── */
+
 export async function runValidator({ callerUrl, skillName, usageExample }) {
   const __dir = dirname(fileURLToPath(callerUrl));
-  const schemaPath = join(__dir, '..', 'assets', 'schema.json');
+  const schemasDir = join(__dir, '..', 'schemas');
+  const schemas = listSchemasInDir(schemasDir);
+  const args = parseArgs(process.argv.slice(2));
 
+  if (args.help) {
+    printUsage(skillName, schemas);
+    process.exit(0);
+  }
+
+  if (args.listSchemas) {
+    if (schemas.length === 0) {
+      console.error(`Nenhum schema encontrado em ${schemasDir}`);
+      process.exit(2);
+    }
+    console.log(`Schemas disponíveis para skill "${skillName}":`);
+    for (const s of schemas) console.log(`  ${s}`);
+    process.exit(0);
+  }
+
+  if (schemas.length === 0) {
+    console.error(`❌ Skill "${skillName}" não tem schemas em ${schemasDir}.`);
+    process.exit(2);
+  }
+
+  // Selecionar schema
+  let schemaName;
+  if (args.schema) {
+    if (!schemas.includes(args.schema)) {
+      console.error(`❌ Schema "${args.schema}" não existe na skill "${skillName}".`);
+      console.error(`   Schemas disponíveis: ${schemas.join(', ')}`);
+      process.exit(2);
+    }
+    schemaName = args.schema;
+  } else if (schemas.length === 1) {
+    schemaName = schemas[0];
+  } else {
+    console.error(`❌ Skill "${skillName}" tem múltiplos schemas. Use --schema=<nome>.`);
+    console.error(`   Schemas disponíveis: ${schemas.join(', ')}`);
+    process.exit(2);
+  }
+
+  const schemaPath = join(schemasDir, `${schemaName}.json`);
   let schema;
   try {
     schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
   } catch (e) {
-    console.error(`❌ Schema não encontrado em ${schemaPath}: ${e.message}`);
-    process.exit(1);
+    console.error(`❌ Schema não pôde ser carregado: ${e.message}`);
+    process.exit(2);
   }
 
-  const raw = await resolveRawPayload();
+  // Resolver payload
+  const raw = await resolveRawPayload(args.positional);
   if (!raw) {
-    console.error(`❌ Nenhum payload fornecido para skill "${skillName}".`);
-    console.error(`   Uso: node validate.mjs '${usageExample}'`);
-    console.error(
-      `   Dica: este validador checa apenas a estrutura (campos obrigatórios, tipos, campos desconhecidos). Pode-se passar placeholders nos valores — só os nomes e tipos importam.`,
-    );
-    process.exit(1);
+    console.error(`❌ Nenhum payload fornecido.`);
+    printUsage(skillName, schemas);
+    if (usageExample) console.error(`Exemplo: ${usageExample}`);
+    process.exit(2);
   }
 
   let payload;
@@ -188,10 +299,10 @@ export async function runValidator({ callerUrl, skillName, usageExample }) {
     payload = JSON.parse(raw);
   } catch (e) {
     console.error(`❌ Payload não é JSON válido: ${e.message}`);
-    console.error(`   Exemplo: '${usageExample}'`);
-    process.exit(1);
+    process.exit(2);
   }
 
+  // Desembrulhar envelope se aplicável
   if (
     schema.title &&
     payload[schema.title] &&
@@ -204,16 +315,38 @@ export async function runValidator({ callerUrl, skillName, usageExample }) {
   const errors = validatePayload(schema, payload);
 
   if (errors.length === 0) {
-    console.log('✅ Payload válido — pode prosseguir.');
+    if (args.json) {
+      console.log(JSON.stringify({
+        valid: true,
+        schema: schemaName,
+        validatorVersion: VALIDATOR_VERSION,
+      }, null, 2));
+    } else {
+      console.log('✅ Payload válido — pode prosseguir.');
+    }
     process.exit(0);
   }
 
-  const attempt = process.env.VALIDATE_ATTEMPT ?? '1';
-  console.error(`❌ Validação falhou — ${errors.length} erro${errors.length > 1 ? 's' : ''}:`);
-  for (const err of errors) {
-    console.error(`  • ${err.message}`);
-    console.error(`    ${err.hint}`);
+  if (args.json) {
+    console.log(JSON.stringify({
+      valid: false,
+      errors: errors.map((e) => ({
+        path: e.path,
+        keyword: e.keyword,
+        message: e.message,
+        suggestion: e.hint?.replace(/^→\s*/, '') ?? '',
+      })),
+      schema: schemaName,
+      validatorVersion: VALIDATOR_VERSION,
+    }, null, 2));
+  } else {
+    const attempt = process.env.VALIDATE_ATTEMPT ?? '1';
+    console.error(`❌ Validação falhou — ${errors.length} erro${errors.length > 1 ? 's' : ''}:`);
+    for (const err of errors) {
+      console.error(`  • ${err.message}`);
+      console.error(`    ${err.hint}`);
+    }
+    console.error(`\nCorrija e tente novamente (tentativa ${attempt}/3).`);
   }
-  console.error(`\nCorrija e tente novamente (tentativa ${attempt}/3).`);
   process.exit(1);
 }

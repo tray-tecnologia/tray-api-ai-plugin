@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Order",
+  "description": "Payload de atualização parcial de pedido via PUT /orders/:id. Doc: https://developers.tray.com.br/#api-de-pedidos",
+  "type": "object",
+  "properties": {
+    "status_id": {
+      "type": "integer",
+      "description": "ID do status para qual mover o pedido (ver tray-status-pedido)."
+    },
+    "tracking_code": {
+      "type": "string",
+      "description": "Código de rastreamento do envio."
+    },
+    "shipping_date": { "type": "string", "format": "date" },
+    "shipping_method": { "type": "string" },
+    "shipping_cost": { "type": "number", "minimum": 0 },
+    "notes": { "type": "string" }
+  },
+  "additionalProperties": false
+}

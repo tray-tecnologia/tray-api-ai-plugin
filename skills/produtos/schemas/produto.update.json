@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Product",
+  "description": "Payload de atualização parcial de produto via PUT /products/:id. Todos os campos são opcionais. Doc: https://developers.tray.com.br/#api-de-produtos",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string", "maxLength": 255 },
+    "price": { "type": "number", "minimum": 0 },
+    "description": { "type": "string" },
+    "stock": { "type": "integer", "minimum": 0 },
+    "ean": { "type": "string", "format": "ean" },
+    "ncm": { "type": "string", "format": "ncm" },
+    "category_id": { "type": "integer" },
+    "brand_id": { "type": "integer" },
+    "weight": { "type": "number", "minimum": 0 },
+    "length": { "type": "number", "minimum": 0 },
+    "width": { "type": "number", "minimum": 0 },
+    "height": { "type": "number", "minimum": 0 },
+    "available": { "type": "integer", "enum": [0, 1] }
+  },
+  "additionalProperties": false
+}

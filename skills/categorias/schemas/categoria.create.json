@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Category",
+  "description": "Payload de criação de categoria via POST /categories. Doc: https://developers.tray.com.br/#api-de-categorias",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Nome da categoria exibido na vitrine."
+    },
+    "parent_id": {
+      "type": "integer",
+      "description": "ID da categoria-pai (omita para criar no nível raiz)."
+    },
+    "description": {
+      "type": "string",
+      "description": "Texto descritivo opcional para SEO."
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "URL amigável (lowercase, dígitos e hífen)."
+    },
+    "active": {
+      "type": "integer",
+      "enum": [0, 1],
+      "description": "1 = ativa; 0 = oculta."
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}

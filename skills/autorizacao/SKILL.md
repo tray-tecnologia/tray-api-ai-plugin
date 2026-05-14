@@ -16,6 +16,32 @@ when_not_to_use: >
   refresh_token.
 ---
 
+## MANDATORY: Tool Calls Required Before Answering
+
+> **Estas chamadas são OBRIGATÓRIAS, não opcionais.** Execute-as antes de gerar
+> qualquer código ou payload. Se você está respondendo sem ter chamado as duas
+> ferramentas abaixo, **pare e chame agora**.
+
+### 1. Buscar documentação atualizada (sempre)
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs --topic=autorizacao "<termo da pergunta>"
+```
+
+- `<TOPIC_SLUG>`: ver tabela em `skills/tray-dev/SKILL.md`.
+- Use os trechos retornados como fonte primária; este SKILL.md é resumo.
+
+### 2. Validar payload localmente (antes de retornar código)
+
+```bash
+node skills/autorizacao/scripts/validate.mjs --schema=<SCHEMA_NAME> '<payload_json>'
+```
+
+- Schemas disponíveis: `auth-request`, `auth-refresh`. Use `--list-schemas` para confirmar.
+- Exit codes: `0` válido · `1` inválido · `2` erro de uso.
+- Para output programático: `--json`.
+- Corrija todos os erros antes de retornar o código (até 3 tentativas).
+
 ## Antes de responder
 
 > Execute estas verificações antes de gerar qualquer payload ou código:
@@ -24,15 +50,6 @@ when_not_to_use: >
 2. Identifique os campos obrigatórios listados neste documento — não omita nenhum.
 3. Verifique que `access_token` não aparece como literal string no código gerado.
 4. Confirme que esta é a skill correta para o recurso (leia `when_not_to_use` no frontmatter).
-5. Execute `node skills/autorizacao/scripts/validate.mjs '<payload_json>'`
-   para confirmar a estrutura do payload que vai gerar. O validador checa
-   apenas **estrutura** (campos obrigatórios, tipos e campos desconhecidos),
-   nunca valores reais — então monte um payload sintético com placeholders
-   sempre que os valores vierem de variáveis de ambiente, do callback OAuth
-   ou de outras chamadas. Exemplo:
-   `node skills/autorizacao/scripts/validate.mjs '{"consumer_key":"<env>","consumer_secret":"<env>","code":"<callback>"}'`.
-   Corrija todos os erros antes de retornar o código ao usuário. Até 3
-   tentativas — se persistir, explique o problema ao usuário.
 
 # Autorização — API Tray
 

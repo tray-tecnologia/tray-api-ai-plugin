@@ -8,11 +8,15 @@
  *   3. Campo `name` presente em todos os arquivos com frontmatter
  *   4. Sem rotas duplicadas dentro de referencia-api.md
  *   5. Skills referenciadas existem no disco
+ *   ...
+ *  13. tray-dev — search smoke (fixture mockada)
+ *  14. lint-skills — bloco MANDATORY em todos os SKILL.md
  *
  * Uso: node scripts/smoke-test.js
  */
 
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync, statSync, writeFileSync, mkdtempSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
 import { spawnSync } from 'child_process';
 import { join, dirname, basename } from 'path';
 import { fileURLToPath } from 'url';
@@ -221,47 +225,103 @@ try {
   fail(`Verificação de agentes — erro: ${e.message}`);
 }
 
-// ─── 6. validate.mjs — payload válido ─────────────────────────────────────────
+// ─── 6. validate.mjs com payload válido (multi-schema) ────────────────────────
 
-section('6. validate.mjs com payload válido');
+section('6. validate.mjs com payload válido (multi-schema)');
 
-const validPayloads = [
-  { skill: 'produtos',    payload: '{"name":"Produto Teste","price":"99.90"}' },
-  { skill: 'pedidos',     payload: '{"client_id":1,"products":[]}' },
-  { skill: 'autorizacao', payload: '{"consumer_key":"abc","consumer_secret":"xyz","code":"123"}' },
-  { skill: 'webhooks',    payload: '{"seller_id":100,"scope_id":200,"scope_name":"order","act":"insert"}' },
-  { skill: 'clientes',    payload: '{"name":"João Silva","email":"joao@exemplo.com"}' },
-];
+const validateSkills = {
+  autorizacao: {
+    'auth-request': '{"AuthRequest":{"consumer_key":"k","consumer_secret":"s","code":"c"}}',
+    'auth-refresh': '{"AuthRefresh":{"consumer_key":"k","refresh_token":"rt"}}',
+  },
+  produtos: {
+    'produto.create': '{"Product":{"name":"X","price":1}}',
+    'produto.update': '{"Product":{"price":2}}',
+  },
+  pedidos: {
+    'pedido.create': '{"Order":{"customer_id":1,"products":[{"product_id":1,"quantity":1}]}}',
+    'pedido.update': '{"Order":{"status_id":5}}',
+  },
+  clientes: {
+    'cliente.create': '{"Customer":{"name":"A","email":"a@b.com"}}',
+    'cliente.update': '{"Customer":{"email":"novo@x.com"}}',
+  },
+  webhooks: {
+    'webhook.payload': '{"Webhook":{"seller_id":1,"scope_id":1,"scope_name":"order","act":"insert"}}',
+  },
+  variacoes: {
+    'variacao.create': '{"Variant":{"sku":"X","price":1}}',
+    'variacao.update': '{"Variant":{"price":2}}',
+  },
+  categorias: {
+    'categoria.create': '{"Category":{"name":"Masc"}}',
+    'categoria.update': '{"Category":{"name":"Y"}}',
+  },
+  marcas: {
+    'marca.create': '{"Brand":{"name":"Nike"}}',
+    'marca.update': '{"Brand":{"slug":"nike"}}',
+  },
+};
 
-for (const { skill, payload } of validPayloads) {
-  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
-  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
-  if (result.status === 0) {
-    ok(`skills/${skill}/scripts/validate.mjs — payload válido aceito`);
-  } else {
-    fail(`skills/${skill}/scripts/validate.mjs — falhou com payload válido: ${result.stderr?.trim()}`);
+for (const [skill, schemas] of Object.entries(validateSkills)) {
+  for (const [schemaName, validPayload] of Object.entries(schemas)) {
+    const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+    const result = spawnSync('node', [scriptPath, `--schema=${schemaName}`, validPayload], { encoding: 'utf-8' });
+    if (result.status === 0) {
+      ok(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — payload válido aceito`);
+    } else {
+      fail(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — falhou: ${result.stderr?.trim()}`);
+    }
   }
 }
 
-// ─── 7. validate.mjs — payload inválido ───────────────────────────────────────
+// ─── 7. validate.mjs com payload inválido (multi-schema) ──────────────────────
 
 section('7. validate.mjs com payload inválido (deve rejeitar)');
 
-const invalidPayloads = [
-  { skill: 'produtos',    payload: '{"price":"99.90"}',              expect: 'name ausente' },
-  { skill: 'pedidos',     payload: '{"products":[]}',                expect: 'client_id ausente' },
-  { skill: 'autorizacao', payload: '{"consumer_key":"abc"}',         expect: 'consumer_secret e code ausentes' },
-  { skill: 'webhooks',    payload: '{"seller_id":100}',              expect: 'scope_id/scope_name/act ausentes' },
-  { skill: 'clientes',    payload: '{"cpf":"12345678901"}',          expect: 'name e email ausentes' },
-];
+const invalidPayloads = {
+  autorizacao: {
+    'auth-request': ['{"AuthRequest":{"consumer_key":"k"}}', 'falta consumer_secret/code'],
+    'auth-refresh': ['{"AuthRefresh":{"consumer_key":"k"}}', 'falta refresh_token'],
+  },
+  produtos: {
+    'produto.create': ['{"Product":{"price":1}}', 'falta name'],
+    'produto.update': ['{"Product":{"price":"abc"}}', 'price string'],
+  },
+  pedidos: {
+    'pedido.create': ['{"Order":{"customer_id":1}}', 'falta products'],
+    'pedido.update': ['{"Order":{"status_id":"5"}}', 'status_id string'],
+  },
+  clientes: {
+    'cliente.create': ['{"Customer":{"name":"A"}}', 'falta email'],
+    'cliente.update': ['{"Customer":{"email":"sem-arroba"}}', 'email malformado'],
+  },
+  webhooks: {
+    'webhook.payload': ['{"Webhook":{"seller_id":1,"scope_id":1,"scope_name":"order"}}', 'falta act'],
+  },
+  variacoes: {
+    'variacao.create': ['{"Variant":{"sku":"X"}}', 'falta price'],
+    'variacao.update': ['{"Variant":{"price":-1}}', 'price negativo'],
+  },
+  categorias: {
+    'categoria.create': ['{"Category":{}}', 'falta name'],
+    'categoria.update': ['{"Category":{"parent_id":"1"}}', 'parent_id string'],
+  },
+  marcas: {
+    'marca.create': ['{"Brand":{}}', 'falta name'],
+    'marca.update': ['{"Brand":{"slug":"with space"}}', 'slug com espaço'],
+  },
+};
 
-for (const { skill, payload, expect } of invalidPayloads) {
-  const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
-  const result = spawnSync('node', [scriptPath, payload], { encoding: 'utf-8' });
-  if (result.status === 1) {
-    ok(`skills/${skill}/scripts/validate.mjs — rejeitou payload inválido (${expect})`);
-  } else {
-    fail(`skills/${skill}/scripts/validate.mjs — deveria rejeitar (${expect}) mas retornou exit ${result.status}`);
+for (const [skill, schemas] of Object.entries(invalidPayloads)) {
+  for (const [schemaName, [payload, expect]] of Object.entries(schemas)) {
+    const scriptPath = join(ROOT, 'skills', skill, 'scripts', 'validate.mjs');
+    const result = spawnSync('node', [scriptPath, `--schema=${schemaName}`, payload], { encoding: 'utf-8' });
+    if (result.status === 1) {
+      ok(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — rejeitou (${expect})`);
+    } else {
+      fail(`skills/${skill}/scripts/validate.mjs --schema=${schemaName} — deveria rejeitar (${expect}) mas exit=${result.status}`);
+    }
   }
 }
 
@@ -379,6 +439,238 @@ try {
   }
 } catch (e) {
   fail(`Verificação de contrato {ok, reason} — erro: ${e.message}`);
+}
+
+// ─── 12. lint-schemas em todos os schemas ─────────────────────────────────────
+
+section('12. lint-schemas em todos os schemas');
+
+const lintResult = spawnSync('node', [join(ROOT, 'scripts', 'lint-schemas.mjs')], { encoding: 'utf-8' });
+if (lintResult.status === 0) {
+  ok(`lint-schemas passou em todos os schemas`);
+} else {
+  fail(`lint-schemas falhou:\n${lintResult.stdout}\n${lintResult.stderr}`);
+}
+
+// ─── 13. tray-dev — search smoke (fixture mockada) ─────────────────────────────
+
+section('13. Search docs (tray-dev) — smoke');
+
+const tmpDir = mkdtempSync(join(tmpdir(), 'tray-search-smoke-'));
+try {
+  const fakeIdx = {
+    version: '1.0.0',
+    documents: [
+      {
+        id: 'gerar-chaves',
+        h1: 'Autorização',
+        title: 'Gerar Chaves de Acesso',
+        level: 'h2',
+        anchor: 'gerar-chaves',
+        body: 'Use OAuth 2.0 para autenticar',
+        code: [],
+        tokens: {
+          title: ['ger', 'chav', 'acess'],
+          code: [],
+          body: ['us', 'oauth', '2', '0', 'autentic'],
+        },
+        length: 8,
+      },
+      {
+        id: 'post-products',
+        h1: 'API de Produtos',
+        title: 'POST /products',
+        level: 'h2',
+        anchor: 'post-products',
+        body: 'Cria produto novo',
+        code: [],
+        tokens: {
+          title: ['post', 'product'],
+          code: [],
+          body: ['cri', 'produt', 'nov'],
+        },
+        length: 5,
+      },
+    ],
+    docFreq: {
+      ger: 1,
+      chav: 1,
+      acess: 1,
+      us: 1,
+      oauth: 1,
+      '2': 1,
+      '0': 1,
+      autentic: 1,
+      post: 1,
+      product: 1,
+      cri: 1,
+      produt: 1,
+      nov: 1,
+    },
+    avgdl: 6.5,
+    N: 2,
+  };
+  writeFileSync(join(tmpDir, 'raw.html'), '# Autorização\n\n## Gerar Chaves de Acesso\nUse OAuth 2.0\n', 'utf8');
+  writeFileSync(join(tmpDir, 'parsed.md'), '', 'utf8');
+  writeFileSync(join(tmpDir, 'index.json'), JSON.stringify(fakeIdx), 'utf8');
+  writeFileSync(
+    join(tmpDir, 'metadata.json'),
+    JSON.stringify({
+      fetchedAt: new Date().toISOString(),
+      ttlMs: 86400000,
+      sourceHash: 'sha256:smoke',
+      indexVersion: '1.0.0',
+    }),
+    'utf8'
+  );
+
+  const env = { ...process.env, TRAY_DOCS_CACHE_DIR: tmpDir };
+  const SCRIPT = join(ROOT, 'skills', 'tray-dev', 'scripts', 'search_docs.mjs');
+
+  const r1 = spawnSync('node', [SCRIPT, '--list-topics'], { env, encoding: 'utf8', cwd: ROOT });
+  if (r1.status === 0 && r1.stdout.includes('produtos')) ok('13.1 --list-topics ok');
+  else fail(`13.1 --list-topics falhou (exit=${r1.status})`);
+
+  const r2 = spawnSync('node', [SCRIPT, '--json', 'oauth'], { env, encoding: 'utf8', cwd: ROOT });
+  let d2;
+  try {
+    d2 = JSON.parse(r2.stdout);
+  } catch {
+    d2 = null;
+  }
+  if (r2.status === 0 && d2 && d2.results.length >= 1) ok('13.2 query "oauth" retorna >=1 resultado');
+  else fail(`13.2 query oauth falhou (exit=${r2.status})`);
+
+  const r3 = spawnSync('node', [SCRIPT, '--json', 'palavraqueeunaoexiste9999'], {
+    env,
+    encoding: 'utf8',
+    cwd: ROOT,
+  });
+  let d3;
+  try {
+    d3 = JSON.parse(r3.stdout);
+  } catch {
+    d3 = null;
+  }
+  if (r3.status === 0 && d3 && d3.results.length === 0)
+    ok('13.3 query inexistente retorna 0 (exit 0)');
+  else fail(`13.3 query inexistente falhou (exit=${r3.status})`);
+
+  const r4 = spawnSync('node', [SCRIPT, '--topic=produtos', '--json', 'post'], {
+    env,
+    encoding: 'utf8',
+    cwd: ROOT,
+  });
+  let d4;
+  try {
+    d4 = JSON.parse(r4.stdout);
+  } catch {
+    d4 = null;
+  }
+  if (
+    r4.status === 0 &&
+    d4 &&
+    (d4.results.length === 0 || d4.results.every((r) => r.topic === 'produtos'))
+  )
+    ok('13.4 --topic=produtos filtra corretamente');
+  else fail(`13.4 --topic=produtos falhou (exit=${r4.status})`);
+} finally {
+  rmSync(tmpDir, { recursive: true, force: true });
+}
+
+// ─── 14. lint-skills em todos os SKILL.md ─────────────────────────────────────
+
+console.log('\n[14] lint-skills (bloco MANDATORY em todas as skills):');
+
+const lintSkillsResult = spawnSync('node', ['scripts/lint-skills.mjs'], {
+  cwd: ROOT,
+  encoding: 'utf-8',
+});
+
+if (lintSkillsResult.status === 0) {
+  ok('lint-skills passou em todas as skills');
+} else {
+  fail(
+    `lint-skills falhou (exit=${lintSkillsResult.status}):\n${lintSkillsResult.stdout}\n${lintSkillsResult.stderr}`
+  );
+}
+
+// ─── 15. MCP server smoke (stdio com 3 requests JSON-RPC) ─────────────────────
+
+console.log('\n[15] MCP server smoke (stdio):');
+
+try {
+  const initReq = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'initialize',
+    params: {
+      protocolVersion: '2024-11-05',
+      capabilities: {},
+      clientInfo: { name: 'smoke', version: '1.0' },
+    },
+  };
+  const initNotif = { jsonrpc: '2.0', method: 'notifications/initialized' };
+  const listReq = { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} };
+  const callReq = {
+    jsonrpc: '2.0',
+    id: 3,
+    method: 'tools/call',
+    params: {
+      name: 'tray.validate',
+      arguments: { schema: 'inexistente', payload: {} },
+    },
+  };
+  const stdin = [
+    JSON.stringify(initReq),
+    JSON.stringify(initNotif),
+    JSON.stringify(listReq),
+    JSON.stringify(callReq),
+    '',
+  ].join('\n');
+
+  const child = spawnSync('node', ['mcp/server.mjs'], {
+    cwd: ROOT,
+    encoding: 'utf-8',
+    timeout: 8000,
+    input: stdin,
+  });
+
+  const responses = child.stdout
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  if (responses.length >= 3) {
+    ok(`15.1 server stdio respondeu ${responses.length} mensagens JSON-RPC`);
+  } else {
+    fail(
+      `15.1 server respondeu apenas ${responses.length} mensagens; stdout: ${child.stdout.slice(0, 200)}; stderr: ${child.stderr.slice(0, 200)}`
+    );
+  }
+
+  const listResp = responses.find((r) => r.id === 2);
+  if (listResp?.result?.tools?.length === 2) {
+    ok('15.2 ListTools retorna exatamente 2 tools');
+  } else {
+    fail(`15.2 ListTools não retornou 2 tools: ${JSON.stringify(listResp)}`);
+  }
+
+  const callResp = responses.find((r) => r.id === 3);
+  if (callResp?.result?.isError === true) {
+    ok('15.3 CallTool com schema inválido retorna isError:true');
+  } else {
+    fail(`15.3 CallTool não retornou isError: ${JSON.stringify(callResp)}`);
+  }
+} catch (e) {
+  fail(`15 erro inesperado: ${e.message}`);
 }
 
 // ─── Resultado final ───────────────────────────────────────────────────────────

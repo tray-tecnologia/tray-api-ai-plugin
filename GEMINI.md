@@ -17,6 +17,41 @@ Documentação oficial: https://developers.tray.com.br
 - Paginação máxima: 50 itens por requisição.
 - Nunca escrever credenciais como literais — usar variáveis de ambiente.
 
+### Bloco MANDATORY e lint de skills
+
+- Toda skill nova **deve** ter `## MANDATORY: Tool Call(s) Required Before Answering` **imediatamente** após o frontmatter.
+- O bloco **deve** incluir chamada **OBRIGATÓRIA(S)** a `node skills/tray-dev/scripts/search_docs.mjs` (sempre).
+- Skills com schema local (categoria A: `autorizacao`, `produtos`, `pedidos`, `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`) **devem** incluir também chamada **OBRIGATÓRIA(S)** a `node skills/<recurso>/scripts/validate.mjs`.
+- Validar com `npm run lint:skills`. O CI roda `npm run lint:skills` antes do smoke.
+
+### Validação local
+
+- 8 skills têm `scripts/validate.mjs`: `autorizacao`, `produtos`, `pedidos`,
+  `clientes`, `webhooks`, `variacoes`, `categorias`, `marcas`.
+- Skills com múltiplos schemas exigem `--schema=<op>`. Use `--list-schemas`
+  para descobrir os disponíveis.
+- Output humano por default; `--json` para programático. Exit codes:
+  `0` válido · `1` inválido · `2` erro de uso.
+- Formats BR custom: `cpf`, `cnpj`, `cep`, `ean`, `ncm`, `date`, `datetime`,
+  `email`, `uri`. Detalhes em `scripts/lib/SUBSET.md`.
+
+### Busca em docs
+
+Para confirmar comportamento da API antes de gerar código, use a skill `tray-dev`:
+
+```bash
+node skills/tray-dev/scripts/search_docs.mjs "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --topic=<slug> "<termo>"
+node skills/tray-dev/scripts/search_docs.mjs --json "<termo>"
+```
+
+- Cache local em `~/.cache/tray-plugin/dev-docs/` (TTL 24h)
+- Exit codes: 0 (ok), 1 (erro execução), 2 (erro de uso)
+- Tópicos: `--list-topics` para a lista canônica
+- Privacidade: `OPT_OUT_INSTRUMENTATION=true` desativa telemetria
+
+O repositório inclui um servidor MCP em `mcp/`: inicie com `npm run mcp` ou `npx --package=@tray-tecnologia/tray-api-plugin tray-mcp`; expõe `tray.search_docs` e `tray.validate`. Para configurar clientes, veja `mcp/README.md`.
+
 ---
 
 ## Skill de entrada (carregar primeiro)
@@ -88,6 +123,7 @@ mencionar o tema:
 | Produtos vendidos | `skills/produtos-vendidos/SKILL.md` |
 | Palavras-chave | `skills/palavras-chave/SKILL.md` |
 | Newsletter | `skills/newsletter/SKILL.md` |
+| `tray-dev` | `skills/tray-dev/SKILL.md` |
 
 ---
 

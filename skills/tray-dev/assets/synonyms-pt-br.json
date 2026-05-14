@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "groups": [
+    { "primary": "oauth", "synonyms": ["autenticar","autenticacao","login","acesso","token","auth","consumer key","consumer secret","refresh token","access token"] },
+    { "primary": "post", "synonyms": ["criar","cadastrar","adicionar","incluir","inserir","registrar"] },
+    { "primary": "put", "synonyms": ["atualizar","editar","modificar","alterar","substituir"] },
+    { "primary": "patch", "synonyms": ["atualizar parcialmente","patch parcial"] },
+    { "primary": "get", "synonyms": ["listar","buscar","consultar","obter","ler","ver"] },
+    { "primary": "delete", "synonyms": ["excluir","remover","deletar","apagar"] },
+    { "primary": "product", "synonyms": ["produto","produtos","item","mercadoria","sku"] },
+    { "primary": "customer", "synonyms": ["cliente","clientes","comprador","consumidor","usuario"] },
+    { "primary": "order", "synonyms": ["pedido","pedidos","venda","compra","ordem"] },
+    { "primary": "webhook", "synonyms": ["notificacao","callback","evento","listener","scope"] },
+    { "primary": "category", "synonyms": ["categoria","categorias","departamento"] },
+    { "primary": "brand", "synonyms": ["marca","marcas","fabricante"] },
+    { "primary": "variant", "synonyms": ["variacao","variacoes","variant","tamanho","cor","modelo"] },
+    { "primary": "image", "synonyms": ["imagem","imagens","foto","fotos"] },
+    { "primary": "shipping", "synonyms": ["frete","envio","entrega","transportadora"] },
+    { "primary": "payment", "synonyms": ["pagamento","pagamentos","boleto","pix","cartao","transferencia"] },
+    { "primary": "invoice", "synonyms": ["nota fiscal","nfe","nf-e","danfe","fiscal"] },
+    { "primary": "coupon", "synonyms": ["cupom","cupons","desconto","promocao","voucher"] },
+    { "primary": "stock", "synonyms": ["estoque","inventario","saldo"] },
+    { "primary": "price", "synonyms": ["preco","valor","custo"] },
+    { "primary": "address", "synonyms": ["endereco","enderecos","cep","rua","logradouro"] },
+    { "primary": "kit", "synonyms": ["kit","kits","combo","bundle","pacote"] },
+    { "primary": "newsletter", "synonyms": ["newsletter","assinante","mailing"] }
+  ]
+}

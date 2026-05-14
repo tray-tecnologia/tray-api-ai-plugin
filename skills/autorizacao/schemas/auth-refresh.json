@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AuthRefresh",
+  "description": "Payload de renovação de access_token (GET /auth com refresh_token). Doc: https://developers.tray.com.br/#autorizacao",
+  "type": "object",
+  "properties": {
+    "consumer_key": {
+      "type": "string",
+      "description": "Chave do aplicativo emitida pela Tray."
+    },
+    "refresh_token": {
+      "type": "string",
+      "description": "Token de renovação válido por 30 dias, emitido junto com o access_token."
+    }
+  },
+  "required": ["consumer_key", "refresh_token"],
+  "additionalProperties": false
+}

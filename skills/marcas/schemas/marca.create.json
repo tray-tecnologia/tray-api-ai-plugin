@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Brand",
+  "description": "Payload de criação de marca via POST /brands. Doc: https://developers.tray.com.br/#api-de-marcas",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "maxLength": 255,
+      "description": "Nome da marca."
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "URL amigável da marca (lowercase, dígitos, hífen)."
+    },
+    "description": {
+      "type": "string",
+      "description": "Descrição opcional da marca."
+    },
+    "active": {
+      "type": "integer",
+      "enum": [0, 1],
+      "description": "1 = ativa; 0 = oculta."
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}
