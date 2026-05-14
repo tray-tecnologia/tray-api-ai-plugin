@@ -307,22 +307,22 @@ walkDir(join(ROOT, 'skills'), 'SKILL.md', (fullPath) => {
 });
 if (missingField === 0) ok(`${totalField} SKILL.md contêm o campo "when_not_to_use"`);
 
-// ─── 10. Matcher do hook UserPromptSubmit cobre prompts PT-BR ─────────────────
+// ─── 10. UserPromptSubmit ausente de hooks.json ───────────────────────────────
+// O hook UserPromptSubmit foi removido: contexto Tray vive em CLAUDE.md/GEMINI.md.
+// Hooks LLM em UserPromptSubmit são não-determinísticos e causam bloqueios falsos
+// em prompts não relacionados à API Tray.
 
-section('10. Matcher do hook UserPromptSubmit (cobertura PT-BR)');
+section('10. UserPromptSubmit ausente de hooks.json (regressão)');
 
 try {
-  const result = spawnSync('node', [join(ROOT, 'scripts', 'test-prompt-matcher.mjs')], {
-    encoding: 'utf-8',
-  });
-  if (result.status === 0) {
-    ok('matcher de UserPromptSubmit casa todos os prompts esperados (Bloco 1, 5, 6) e ignora Bloco 4');
+  const hooksJson = JSON.parse(readFileSync(join(ROOT, 'hooks/hooks.json'), 'utf-8'));
+  if (hooksJson.hooks && hooksJson.hooks.UserPromptSubmit) {
+    fail('hooks.json contém UserPromptSubmit — deve ser removido (usa CLAUDE.md para contexto Tray)');
   } else {
-    fail(`matcher de UserPromptSubmit falhou — rode 'node scripts/test-prompt-matcher.mjs' para detalhes`);
-    if (result.stdout) console.error(result.stdout.split('\n').filter(l => l.includes('❌')).map(l => '    ' + l).join('\n'));
+    ok('hooks.json não contém UserPromptSubmit — contexto Tray via CLAUDE.md/GEMINI.md');
   }
 } catch (e) {
-  fail(`Verificação de matcher — erro: ${e.message}`);
+  fail(`Verificação de UserPromptSubmit — erro: ${e.message}`);
 }
 
 // ─── 11. Contrato {ok, reason} em hooks do tipo "prompt" ──────────────────────
